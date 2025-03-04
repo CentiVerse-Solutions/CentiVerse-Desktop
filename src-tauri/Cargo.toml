@@ -26,4 +26,6 @@ tauri-plugin-log = "2.0.0-rc"
 axum = "0.6"
 tokio = { version = "1", features = ["full"] }
 tower = "0.4"
+dotenv = "0.15"
+sqlx = { version = "0.6", features = ["postgres", "runtime-tokio-native-tls"] }
 

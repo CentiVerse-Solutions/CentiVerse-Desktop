@@ -1,34 +1,22 @@
-// Import necessary crates
-use axum::{routing::get, Router};
-use std::net::SocketAddr;
+// src/main.rs
+
+mod db;
+mod routes;
+mod controllers;
+
+use axum::{Router, Extension};
+use sqlx::PgPool;
 
 #[tokio::main]
 async fn main() {
-    // Spawn the Axum server on a background task
-    tokio::spawn(async {
-        run_axum_server().await;
-    });
 
-    tauri::Builder::default()
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
+    let pool: PgPool = db::establish_connection()
+        .await
+        .expect("Failed to connect to the database");
+    let app: Router = routes::app_routes().layer(Extension(pool));
 
-// Function to run an example Axum server
-async fn run_axum_server() {
-    // Define a simple route
-    async fn hello() -> &'static str {
-        "Hello from Axum!"
-    }
-
-    // Build the router
-    let app = Router::new().route("/api/hello", get(hello));
-
-    // Define the address (for example, localhost:3000)
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("Axum server listening on {}", addr);
-
-    // Run the Axum server
+    let addr = "0.0.0.0:3000".parse().unwrap();
+    println!("Server running on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
