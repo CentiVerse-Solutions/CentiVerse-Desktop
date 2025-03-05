@@ -1,5 +1,3 @@
-// src/main.rs
-
 mod db;
 mod routes;
 mod controllers;
