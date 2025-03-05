@@ -2,7 +2,8 @@ use axum::{Json, extract::Extension, response::IntoResponse};
 use sea_orm::{DatabaseConnection, EntityTrait, Set};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use crate::entities::users;
+
+use crate::entities::{users, users::Entity};
 
 #[derive(Debug, Deserialize)]
 pub struct SignupRequest {
@@ -57,4 +58,3 @@ pub async fn signup_handler(
         }
     }
 }
-

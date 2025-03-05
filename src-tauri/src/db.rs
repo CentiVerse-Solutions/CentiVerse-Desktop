@@ -8,4 +8,5 @@ pub async fn establish_connection() -> DatabaseConnection {
     Database::connect(&database_url)
         .await
         .expect("Failed to connect to database")
+    
 }
