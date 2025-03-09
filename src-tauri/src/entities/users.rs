@@ -4,20 +4,20 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "users")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub id: String,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid, 
+    
+    pub oauth_provider: String,  
+    pub oauth_id: String,  
     pub username: Option<String>,
     pub email: Option<String>,
-    pub phone: Option<String>,
-    pub name: Option<String>,
-    pub password: Option<String>,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub upi_id: Option<String>,  
+    
+    pub created_at: DateTimeWithTimeZone, 
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-#[sea_orm(table_name = "users")]
-
 pub enum Relation {
     #[sea_orm(has_many = "super::friend_collections::Entity")]
     FriendCollections,

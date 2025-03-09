@@ -6,7 +6,7 @@ use rust_decimal::Decimal;
 #[sea_orm(table_name = "activities")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: String,
+    pub id: Uuid,
     pub description: Option<String>,
     pub paid_by_id: String,
     pub group_id: String,
