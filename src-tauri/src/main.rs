@@ -1,12 +1,11 @@
-// src/main.rs
-
 mod db;
 mod routes;
 mod controllers;
 mod entities;
+mod models;
+mod custom_errors;
 
 use axum::{Router, Extension};
-use sqlx::PgPool;
 
 #[tokio::main]
 async fn main() {

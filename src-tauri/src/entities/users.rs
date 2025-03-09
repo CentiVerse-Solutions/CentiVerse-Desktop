@@ -9,9 +9,9 @@ pub struct Model {
     
     pub oauth_provider: String,  
     pub oauth_id: String,  
-    pub username: Option<String>,
-    pub email: Option<String>,
-    pub upi_id: Option<String>,  
+    pub username: String,
+    pub email: String,
+    pub upi_id: String,  
     
     pub created_at: DateTimeWithTimeZone, 
     pub updated_at: DateTimeWithTimeZone,
