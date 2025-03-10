@@ -1,22 +1,22 @@
+use rust_decimal::Decimal;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "transactions")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
-    pub payer_id: String,
-    pub receiver_id: String,
-    pub amount: Option<Decimal>,
-    pub method: Option<String>,
-    pub time: Option<DateTime>,
-    pub status: Option<String>,
-    pub group_id: Option<String>,
-    pub activity_id: Option<String>,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub payer_id: Uuid,
+    pub receiver_id: Uuid,
+    pub amount: Decimal,
+    pub method: String,
+    pub time: DateTimeWithTimeZone,
+    pub status: String,
+    pub group_id: Uuid,
+    pub activity_id: Uuid,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

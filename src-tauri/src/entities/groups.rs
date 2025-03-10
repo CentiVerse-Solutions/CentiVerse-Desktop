@@ -7,12 +7,12 @@ use rust_decimal::Decimal;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
-    pub creator_id: String,
-    pub group_name: Option<String>,
+    pub creator_id: Uuid,
+    pub group_name: String,
     pub auto_logo: Option<String>,
-    pub total_expense: Option<Decimal>,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub total_expense: Decimal,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

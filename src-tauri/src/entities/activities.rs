@@ -1,6 +1,6 @@
+use rust_decimal::Decimal;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use rust_decimal::Decimal;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "activities")]
@@ -8,16 +8,16 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
     pub description: Option<String>,
-    pub paid_by_id: String,
-    pub group_id: String,
-    pub time: Option<DateTime>,
-    pub amount: Option<Decimal>,
-    pub split_members: Option<Vec<String>>,
-    pub split_amounts: Option<Vec<Decimal>>,
-    pub user_involvement: Option<bool>,
+    pub paid_by_id: Uuid,
+    pub group_id: Uuid,
+    pub time: DateTimeWithTimeZone,
+    pub amount: Decimal,
+    pub split_members: Vec<Uuid>,
+    pub split_amounts: Vec<Decimal>,
+    pub user_involvement: bool,
     pub expense_logo: Option<String>,
-    pub created_at: Option<DateTime>,
-    pub updated_at: Option<DateTime>,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

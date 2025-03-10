@@ -6,9 +6,9 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: Uuid,
-    pub group_id: String,
-    pub member_id: String,
-    pub joined_at: Option<DateTime>,
+    pub group_id: Uuid,
+    pub member_id: Uuid,
+    pub joined_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
