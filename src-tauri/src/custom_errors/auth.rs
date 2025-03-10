@@ -10,6 +10,9 @@ pub enum SignupError {
     #[error("Database error: {0}")]
     DatabaseError(String),
 
+    #[error("Duplicate error: {0}")]
+    DuplicateError(String),
+
     #[error("Internal server error")]
     InternalServerError,
 }
@@ -24,6 +27,10 @@ impl IntoResponse for SignupError {
             SignupError::DatabaseError(err) => {
                 let error_json = json!({ "Database error": err });
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(error_json)).into_response()
+            }
+            SignupError::DuplicateError(err) => {
+                let error_json = json!({ "Duplicate error": err });
+                (StatusCode::CONFLICT, Json(error_json)).into_response()
             }
             SignupError::InternalServerError => {
                 let error_json = json!({ "Internal server error": "Something went wrong" });

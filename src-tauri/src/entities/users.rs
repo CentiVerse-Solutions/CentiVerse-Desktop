@@ -12,7 +12,6 @@ pub struct Model {
     pub username: String,
     pub email: String,
     pub upi_id: String,  
-    
     pub created_at: DateTimeWithTimeZone, 
     pub updated_at: DateTimeWithTimeZone,
 }
