@@ -49,7 +49,7 @@ impl AuthReq{
     }
 }
 
-#[derive(Debug, Clone, PartialEq,Deserialize)]
+#[derive(Debug, Clone, PartialEq,Serialize)]
 pub struct AuthRes {
     pub oauth_provider: String,
     pub oauth_id: String,  
@@ -82,5 +82,21 @@ impl AuthRes{
             created_at, 
             updated_at,
         }
+    }
+}
+
+
+impl From<crate::entities::users::Model> for AuthRes {
+    fn from(user: crate::entities::users::Model) -> Self {
+        Self::new(
+            user.oauth_provider,
+            user.oauth_id,
+            user.username,
+            user.email,
+            user.upi_id,
+            user.id,
+            user.created_at,
+            user.updated_at,
+        )
     }
 }
