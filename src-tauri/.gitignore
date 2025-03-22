@@ -9,6 +9,11 @@ Cargo.lock
 /src-tauri/.cargo/
 /src-tauri/gen/schemas
 
+/src-tauri/migration/target/
+/src-tauri/migration/Cargo.lock
+/src-tauri/migration/.cargo/
+
+
 # Node.js (React)
 node_modules/
 *.log

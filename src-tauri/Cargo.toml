@@ -34,9 +34,10 @@ tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 
 # Database & ORM (Postgres)
-sqlx = { version = "0.6", features = ["postgres", "runtime-tokio-native-tls", "migrate", "json", "time"] }
+sqlx = { version = "0.6", features = ["postgres", "runtime-tokio-rustls", "migrate", "json", "time"] }
 sea-orm = { version = "0.12", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-json", "with-rust_decimal"] }
 sea-orm-macros = "0.12"
+sea-orm-migration = { version = "0.12", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
 rust_decimal = { version = "1.30", features = ["db-postgres"] }
 
 # Error handling and dotenv
