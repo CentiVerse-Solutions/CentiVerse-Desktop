@@ -13,6 +13,7 @@ Cargo.lock
 /src-tauri/migration/Cargo.lock
 /src-tauri/migration/.cargo/
 
+target/
 
 # Node.js (React)
 node_modules/
