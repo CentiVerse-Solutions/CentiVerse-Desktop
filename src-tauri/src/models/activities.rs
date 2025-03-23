@@ -1,11 +1,10 @@
 use uuid::Uuid;
 use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
-
+use crate::custom_errors::{activities::{ActivityError}};
 
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct CreateActivityReq {
-    pub id: Uuid,
     pub description: Option<String>,
     pub paid_by_id: Uuid,
     pub group_id: Uuid,
@@ -17,7 +16,6 @@ pub struct CreateActivityReq {
 
 impl CreateActivityReq{
     pub fn new(
-        id: Uuid,
         description: Option<String>,
         paid_by_id:Uuid,
         group_id: Uuid,
@@ -27,7 +25,6 @@ impl CreateActivityReq{
         expense_logo: Option<String>
     ) -> Self {
         Self {
-            id,
             description,
             paid_by_id,
             group_id,
@@ -38,4 +35,43 @@ impl CreateActivityReq{
         }
     }
 
+    pub fn check(&mut self) -> Result<(), ActivityError> {
+
+        if let Some(desc) = &self.description {
+            if desc.trim().is_empty() {
+                self.description = None;
+            }
+        }
+
+        if let Some(logo) = &self.expense_logo {
+            if logo.trim().is_empty() {
+                self.expense_logo = None;
+            }
+        }
+    
+        if self.amount <= Decimal::ZERO {
+            return Err(ActivityError::ActivityReqValidationError("Amount must be greater than zero".into()));
+        }
+
+        if self.split_members.is_empty() || self.split_amounts.is_empty() {
+            return Err(ActivityError::ActivityReqValidationError(
+                "Split members and split amounts cannot be empty".into(),
+            ));
+        }
+        if self.split_members.len() != self.split_amounts.len() {
+            return Err(ActivityError::ActivityReqValidationError(
+                "Split members and split amounts must have the same length".into(),
+            ));
+        }
+
+        let total_split: Decimal = self.split_amounts.iter().sum();
+        if total_split != self.amount {
+            return Err(ActivityError::AmountsDontAddUp(
+                "Total split amount does not match the main amount".into(),
+            ));
+        }
+    
+        Ok(())
+    }
+    
 }
