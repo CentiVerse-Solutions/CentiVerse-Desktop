@@ -75,3 +75,72 @@ impl CreateActivityReq{
     }
     
 }
+
+
+#[derive(Debug, Clone, PartialEq,Serialize)]
+pub struct ActivityRes {
+    pub id: Uuid,
+    pub description: Option<String>,
+    pub paid_by_id: Uuid,
+    pub group_id: Uuid,
+    pub time: DateTimeWithTimeZone,
+    pub amount: Decimal,
+    pub split_members: Vec<Uuid>,
+    pub split_amounts: Vec<Decimal>,
+    pub user_involvement: bool,
+    pub expense_logo: Option<String>,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
+}
+
+impl ActivityRes{
+    pub fn new(
+        id: Uuid,
+        description: Option<String>,
+        paid_by_id: Uuid,
+        group_id: Uuid,
+        time: DateTimeWithTimeZone,
+        amount: Decimal,
+        split_members: Vec<Uuid>,
+        split_amounts: Vec<Decimal>,
+        user_involvement: bool,
+        expense_logo: Option<String>,
+        created_at: DateTimeWithTimeZone,
+        updated_at: DateTimeWithTimeZone,
+    ) -> Self {
+        Self {
+            id,
+            description,
+            paid_by_id,
+            group_id,
+            time,
+            amount,
+            split_members,
+            split_amounts,
+            user_involvement,
+            expense_logo,
+            created_at,
+            updated_at
+        }
+    }
+}
+
+
+impl From<crate::entities::activities::Model> for ActivityRes {
+    fn from(activity: crate::entities::activities::Model) -> Self {
+        Self::new(
+            activity.id,
+            activity.description,
+            activity.paid_by_id,
+            activity.group_id,
+            activity.time,
+            activity.amount,
+            activity.split_members.clone(), 
+            activity.split_amounts.clone(),
+            activity.user_involvement,
+            activity.expense_logo,
+            activity.created_at,
+            activity.updated_at,
+        )
+    }
+}
