@@ -1,6 +1,6 @@
 use chrono::Utc;
 use crate::models::activities::{ActivityRes, CreateActivityReq};
-use crate::entities::activities::{self, ActiveModel as ActivityActiveModel};
+use crate::entities::activities::{self};
 use crate::custom_errors::activities::ActivityError;
 use axum::{
     extract::{Json, Extension},
