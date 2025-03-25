@@ -13,6 +13,9 @@ pub enum AuthError {
     #[error("Duplicate error: {0}")]
     DuplicateError(String),
 
+    #[error("User Not Found:{0}")]
+    UserNotFound(String),
+
     #[error("Internal server error")]
     InternalServerError,
 }
@@ -31,6 +34,10 @@ impl IntoResponse for AuthError {
             AuthError::DuplicateError(err) => {
                 let error_json = json!({ "Duplicate error": err });
                 (StatusCode::CONFLICT, Json(error_json)).into_response()
+            }
+            AuthError::UserNotFound(err) => {
+                let error_json = json!({ "User Not Found error": err });
+                (StatusCode::NOT_FOUND, Json(error_json)).into_response()
             }
             AuthError::InternalServerError => {
                 let error_json = json!({ "Internal server error": "Something went wrong" });

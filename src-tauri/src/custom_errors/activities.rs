@@ -13,6 +13,9 @@ pub enum ActivityError {
     #[error("Amounts Don't Add up:{0}")]
     AmountsDontAddUp(String),
 
+    #[error("Activity Not Found:{0}")]
+    ActivityNotFound(String),
+
     #[error("Internal server error")]
     InternalServerError,
 }
@@ -31,6 +34,10 @@ impl IntoResponse for ActivityError {
             ActivityError::AmountsDontAddUp(err) => {
                 let error_json = json!({ "Database error": err });
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(error_json)).into_response()
+            }
+            ActivityError::ActivityNotFound(err) => {
+                let error_json = json!({ "Activity Not Found error": err });
+                (StatusCode::NOT_FOUND, Json(error_json)).into_response()
             }
             ActivityError::InternalServerError => {
                 let error_json = json!({ "Internal server error": "Something went wrong" });
