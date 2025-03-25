@@ -5,7 +5,7 @@ use crate::custom_errors::{activities::{ActivityError}};
 
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct CreateActivityReq {
-    pub description: Option<String>,
+    pub description: String,
     pub paid_by_id: Uuid,
     pub group_id: Uuid,
     pub amount: Decimal,
@@ -16,7 +16,7 @@ pub struct CreateActivityReq {
 
 impl CreateActivityReq{
     pub fn new(
-        description: Option<String>,
+        description: String,
         paid_by_id:Uuid,
         group_id: Uuid,
         amount: Decimal,
@@ -37,12 +37,12 @@ impl CreateActivityReq{
 
     pub fn check(&mut self) -> Result<(), ActivityError> {
 
-        if let Some(desc) = &self.description {
-            if desc.trim().is_empty() {
-                self.description = None;
-            }
+        if self.description.trim().is_empty() {
+            return Err(ActivityError::ActivityReqValidationError(
+                "Description cannot be empty".into(),
+            ));
         }
-
+        
         if let Some(logo) = &self.expense_logo {
             if logo.trim().is_empty() {
                 self.expense_logo = None;
@@ -80,7 +80,7 @@ impl CreateActivityReq{
 #[derive(Debug, Clone, PartialEq,Serialize)]
 pub struct ActivityRes {
     pub id: Uuid,
-    pub description: Option<String>,
+    pub description: String,
     pub paid_by_id: Uuid,
     pub group_id: Uuid,
     pub time: DateTimeWithTimeZone,
@@ -96,7 +96,7 @@ pub struct ActivityRes {
 impl ActivityRes{
     pub fn new(
         id: Uuid,
-        description: Option<String>,
+        description: String,
         paid_by_id: Uuid,
         group_id: Uuid,
         time: DateTimeWithTimeZone,

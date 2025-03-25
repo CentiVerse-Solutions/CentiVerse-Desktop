@@ -10,6 +10,7 @@ mod m20220101_000006_create_transactions_table;
 mod m20220101_000007_create_upi_payments_table;
 mod m20220101_000008_create_cash_transactions_table;
 mod m20220101_000009_create_notifications_table;
+mod m20250325_082658_make_description_required;
 
 pub struct Migrator;
 
@@ -26,6 +27,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20220101_000007_create_upi_payments_table::Migration),
             Box::new(m20220101_000008_create_cash_transactions_table::Migration),
             Box::new(m20220101_000009_create_notifications_table::Migration),
+            Box::new(m20250325_082658_make_description_required::Migration),
         ]
     }
 }
