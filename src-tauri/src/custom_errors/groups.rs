@@ -14,6 +14,9 @@ pub enum GroupError {
     #[error("Database error: {0}")]
     DatabaseError(String),
 
+    #[error("User Not in Group: {0}")]
+    UserNotInGroup(String),
+
     #[error("Group Not Found: {0}")]
     GroupNotFound(String),
 
@@ -34,6 +37,10 @@ impl IntoResponse for GroupError {
             GroupError::DatabaseError(err) => {
                 let error_json = json!({ "Database error": err });
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(error_json)).into_response()
+            }
+            GroupError::UserNotInGroup(err) => {
+                let error_json = json!({ "User Not in Group error": err });
+                (StatusCode::NOT_FOUND, Json(error_json)).into_response()
             }
             GroupError::GroupNotFound(err) => {
                 let error_json = json!({ "Group Not Found error": err });
