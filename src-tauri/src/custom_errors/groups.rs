@@ -9,7 +9,7 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum GroupError {
     #[error("Validation failed: {0}")]
-    AuthReqValidationError(String),
+    GroupReqValidationError(String),
 
     #[error("Database error: {0}")]
     DatabaseError(String),
@@ -27,7 +27,7 @@ pub enum GroupError {
 impl IntoResponse for GroupError {
     fn into_response(self) -> Response {
         match self {
-            GroupError::AuthReqValidationError(err) => {
+            GroupError::GroupReqValidationError(err) => {
                 let error_json = json!({ "Validation error": err });
                 (StatusCode::BAD_REQUEST, Json(error_json)).into_response()
             }
