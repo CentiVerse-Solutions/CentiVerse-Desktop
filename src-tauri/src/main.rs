@@ -4,6 +4,8 @@ mod controllers;
 mod entities;
 mod models;
 mod custom_errors;
+mod utils;
+mod request_verifier;
 
 use axum::{Router, Extension};
 

@@ -100,3 +100,10 @@ impl From<crate::entities::users::Model> for AuthRes {
         )
     }
 }
+
+
+#[derive(Debug, Serialize)]
+pub struct AuthOutput {
+    pub token: String,
+    pub user: AuthRes,
+}
