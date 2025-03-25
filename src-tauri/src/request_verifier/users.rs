@@ -1,45 +1,63 @@
 use axum::{
-    http::{Request, StatusCode},
+    http::Request,
     middleware::Next,
     response::Response,
     extract::Extension,
 };
 use sea_orm::{EntityTrait, ColumnTrait, QueryFilter, DatabaseConnection};
 use crate::entities::users;
-use crate::custom_errors::auth::AuthError;
 use uuid::Uuid;
+use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm, TokenData};
+use crate::models::auth::Claims;
+use crate::custom_errors::auth::AuthError;
+use dotenv::dotenv;
+use std::env;
 
-// need fixessss!!!!|||||||||||||
-
-
-pub async fn verify_user_id<B>(
+pub async fn verify_user<B>(
     Extension(db): Extension<DatabaseConnection>,
-    mut req: Request<B>,
+    req: Request<B>,
     next: Next<B>,
-) -> Result<Response, StatusCode> {
-    // Extract user ID from request (assuming it's passed as a header)
-    let user_id = req
+) -> Result<Response, AuthError> {
+
+    dotenv().ok();
+    let jwt_secret =env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+
+    
+    let token = req
         .headers()
-        .get("user-id")
+        .get("Cookie")
         .and_then(|value| value.to_str().ok())
-        .and_then(|s| Uuid::parse_str(s).ok());
+        .and_then(|cookie_header| {
+            cookie_header.split(';').find_map(|cookie| {
+                let cookie = cookie.trim();
+                if cookie.starts_with("auth_token=") {
+                    Some(cookie.trim_start_matches("auth_token=").to_string())
+                } else {
+                    None
+                }
+            })
+        })
+        .ok_or_else(|| AuthError::Unauthorized("Missing auth_token cookie".into()))?;
 
-    let user_id = match user_id {
-        Some(id) => id,
-        None => return Err(StatusCode::UNAUTHORIZED), 
-    };
+    
+    let decoding_key = DecodingKey::from_secret(jwt_secret.as_ref());
+    let token_data: TokenData<Claims> = decode::<Claims>(&token, &decoding_key, &Validation::new(Algorithm::HS256))
+        .map_err(|_| AuthError::Unauthorized("Invalid token".into()))?;
 
-    // Check if user exists in the database
+    
+    let user_id = Uuid::parse_str(&token_data.claims.sub)
+        .map_err(|_| AuthError::Unauthorized("Invalid user id in token".into()))?;
+
+    
     let existing_user = users::Entity::find()
         .filter(users::Column::Id.eq(user_id))
         .one(&db)
         .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?; 
+        .map_err(|_| AuthError::InternalServerError)?;
 
     if existing_user.is_none() {
-        return Err(StatusCode::UNAUTHORIZED); 
+        return Err(AuthError::UserNotFound("User not found".into()));
     }
-
-  
+    
     Ok(next.run(req).await)
 }

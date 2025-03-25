@@ -107,3 +107,9 @@ pub struct AuthOutput {
     pub token: String,
     pub user: AuthRes,
 }
+
+#[derive(Serialize, Deserialize )]
+pub struct Claims {
+    pub sub: String,
+    pub exp: usize,
+}

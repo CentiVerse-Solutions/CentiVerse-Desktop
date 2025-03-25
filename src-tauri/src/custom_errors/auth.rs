@@ -1,4 +1,8 @@
-use axum::{http::StatusCode, response::{IntoResponse, Response}, Json};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 use serde_json::json;
 use thiserror::Error;
 
@@ -13,8 +17,11 @@ pub enum AuthError {
     #[error("Duplicate error: {0}")]
     DuplicateError(String),
 
-    #[error("User Not Found:{0}")]
+    #[error("User Not Found: {0}")]
     UserNotFound(String),
+
+    #[error("Unauthorized access: {0}")]
+    Unauthorized(String),
 
     #[error("Internal server error")]
     InternalServerError,
@@ -39,6 +46,10 @@ impl IntoResponse for AuthError {
                 let error_json = json!({ "User Not Found error": err });
                 (StatusCode::NOT_FOUND, Json(error_json)).into_response()
             }
+            AuthError::Unauthorized(err) => {
+                let error_json = json!({ "Unauthorized": err });
+                (StatusCode::UNAUTHORIZED, Json(error_json)).into_response()
+            }
             AuthError::InternalServerError => {
                 let error_json = json!({ "Internal server error": "Something went wrong" });
                 (StatusCode::INTERNAL_SERVER_ERROR, Json(error_json)).into_response()
@@ -46,5 +57,3 @@ impl IntoResponse for AuthError {
         }
     }
 }
-
-

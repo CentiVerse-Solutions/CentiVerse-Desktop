@@ -5,12 +5,8 @@ use jsonwebtoken::{encode, Header, EncodingKey};
 use serde::Serialize;
 use dotenv::dotenv;
 use std::env;
+use crate::models::auth::Claims;
 
-#[derive(Serialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
-}
 
 pub fn generate_jwt(user_id: Uuid) -> Result<String, AuthError> {
     dotenv().ok();
