@@ -11,6 +11,7 @@ use axum::{
 use serde_json::json;
 use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait};
 use uuid::Uuid;
+use crate::request_verifier::groups::check_group_exists;
 
 pub async fn create_activity_handler(
     Extension(user_id): Extension<Uuid>,
@@ -19,7 +20,7 @@ pub async fn create_activity_handler(
 ) -> Result<impl IntoResponse, ActivityError> {
     // println!("{}",user_id);
     payload.check()?;
-    
+    check_group_exists(&db,payload.group_id);
     let new_activity = activities::ActiveModel {
         id: Set(Uuid::new_v4()),
         description: Set(payload.description),
