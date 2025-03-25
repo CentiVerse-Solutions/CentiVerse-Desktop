@@ -15,7 +15,7 @@ use std::env;
 
 pub async fn verify_user<B>(
     Extension(db): Extension<DatabaseConnection>,
-    req: Request<B>,
+    mut req: Request<B>,
     next: Next<B>,
 ) -> Result<Response, AuthError> {
 
@@ -58,6 +58,6 @@ pub async fn verify_user<B>(
     if existing_user.is_none() {
         return Err(AuthError::UserNotFound("User not found".into()));
     }
-    
+    req.extensions_mut().insert(user_id);
     Ok(next.run(req).await)
 }
