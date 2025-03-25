@@ -13,7 +13,7 @@ use crate::custom_errors::auth::AuthError;
 use dotenv::dotenv;
 use std::env;
 
-pub async fn re<B>(
+pub async fn verify_user<B>(
     Extension(db): Extension<DatabaseConnection>,
     mut req: Request<B>,
     next: Next<B>,

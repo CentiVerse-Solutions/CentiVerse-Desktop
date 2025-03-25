@@ -6,7 +6,6 @@ use crate::custom_errors::{activities::{ActivityError}};
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct CreateActivityReq {
     pub description: String,
-    pub paid_by_id: Uuid,
     pub group_id: Uuid,
     pub amount: Decimal,
     pub split_members: Vec<Uuid>,
@@ -17,7 +16,6 @@ pub struct CreateActivityReq {
 impl CreateActivityReq{
     pub fn new(
         description: String,
-        paid_by_id:Uuid,
         group_id: Uuid,
         amount: Decimal,
         split_members: Vec<Uuid>,
@@ -26,7 +24,6 @@ impl CreateActivityReq{
     ) -> Self {
         Self {
             description,
-            paid_by_id,
             group_id,
             amount,
             split_members,
@@ -40,6 +37,12 @@ impl CreateActivityReq{
         if self.description.trim().is_empty() {
             return Err(ActivityError::ActivityReqValidationError(
                 "Description cannot be empty".into(),
+            ));
+        }
+        
+        if self.group_id == Uuid::nil() {
+            return Err(ActivityError::ActivityReqValidationError(
+                "Group Id cannot be empty".into(),
             ));
         }
         

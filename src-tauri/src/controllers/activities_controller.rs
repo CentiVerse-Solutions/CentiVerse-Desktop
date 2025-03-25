@@ -12,21 +12,23 @@ use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait};
 use uuid::Uuid;
 
 pub async fn create_activity_handler(
+    Extension(user_id): Extension<Uuid>,
     Extension(db): Extension<sea_orm::DatabaseConnection>, 
     Json(mut payload): Json<CreateActivityReq>
 ) -> Result<impl IntoResponse, ActivityError> {
+    // println!("{}",user_id);
     payload.check()?;
     
     let new_activity = activities::ActiveModel {
         id: Set(Uuid::new_v4()),
         description: Set(payload.description),
-        paid_by_id: Set(payload.paid_by_id),
+        paid_by_id: Set(user_id),
         group_id: Set(payload.group_id),
         time: Set(Utc::now().into()),
         amount: Set(payload.amount),
         split_members: Set(payload.split_members.clone()),
         split_amounts: Set(payload.split_amounts.clone()),
-        user_involvement: Set(payload.split_members.contains(&payload.paid_by_id)),
+        user_involvement: Set(payload.split_members.contains(&user_id)),
         expense_logo: Set(payload.expense_logo),
         created_at: Set(Utc::now().into()),
         updated_at: Set(Utc::now().into()),
