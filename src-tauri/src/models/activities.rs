@@ -2,6 +2,7 @@ use uuid::Uuid;
 use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
 use crate::custom_errors::{activities::{ActivityError}};
+use serde_json::json;
 
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct CreateActivityReq {
@@ -88,8 +89,8 @@ pub struct ActivityRes {
     pub group_id: Uuid,
     pub time: DateTimeWithTimeZone,
     pub amount: Decimal,
-    pub split_members: Vec<Uuid>,
-    pub split_amounts: Vec<Decimal>,
+    pub split_members: Json,
+    pub split_amounts: Json,
     pub user_involvement: bool,
     pub expense_logo: Option<String>,
     pub created_at: DateTimeWithTimeZone,
@@ -104,8 +105,8 @@ impl ActivityRes{
         group_id: Uuid,
         time: DateTimeWithTimeZone,
         amount: Decimal,
-        split_members: Vec<Uuid>,
-        split_amounts: Vec<Decimal>,
+        split_members: Json,
+        split_amounts: Json,
         user_involvement: bool,
         expense_logo: Option<String>,
         created_at: DateTimeWithTimeZone,
@@ -138,8 +139,8 @@ impl From<crate::entities::activities::Model> for ActivityRes {
             activity.group_id,
             activity.time,
             activity.amount,
-            activity.split_members.clone(), 
-            activity.split_amounts.clone(),
+            json!(activity.split_members.clone()), 
+            json!(activity.split_amounts.clone()),
             activity.user_involvement,
             activity.expense_logo,
             activity.created_at,

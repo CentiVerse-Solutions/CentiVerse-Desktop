@@ -11,7 +11,7 @@ use crate::models::auth::Claims;
 pub fn generate_jwt(user_id: Uuid) -> Result<String, AuthError> {
     dotenv().ok();
     let jwt_secret =env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    let expiration = (Utc::now().timestamp() + 3600) as usize;
+    let expiration = (Utc::now().timestamp() + (3600*24)) as usize;
     let claims = Claims {
         sub: user_id.to_string(),
         exp: expiration,

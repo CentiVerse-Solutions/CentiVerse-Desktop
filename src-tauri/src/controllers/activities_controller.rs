@@ -8,6 +8,7 @@ use axum::{
     http::StatusCode,
     Json as AxumJson,
 };
+use serde_json::json;
 use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait};
 use uuid::Uuid;
 
@@ -26,8 +27,8 @@ pub async fn create_activity_handler(
         group_id: Set(payload.group_id),
         time: Set(Utc::now().into()),
         amount: Set(payload.amount),
-        split_members: Set(payload.split_members.clone()),
-        split_amounts: Set(payload.split_amounts.clone()),
+        split_members: Set(json!(payload.split_members)), 
+        split_amounts: Set(json!(payload.split_amounts)),
         user_involvement: Set(payload.split_members.contains(&user_id)),
         expense_logo: Set(payload.expense_logo),
         created_at: Set(Utc::now().into()),
