@@ -20,3 +20,4 @@ pub fn generate_jwt(user_id: Uuid) -> Result<String, AuthError> {
     encode(&Header::default(), &claims, &EncodingKey::from_secret(jwt_secret.as_ref()))
         .map_err(|_| AuthError::InternalServerError)
 }
+
