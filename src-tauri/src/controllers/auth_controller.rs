@@ -1,7 +1,7 @@
 use chrono::Utc;
 use crate::models::auth::{AuthReq, AuthRes, AuthOutput};
 use crate::entities::users::{self, ActiveModel as UserActiveModel};
-use crate::custom_errors::auth::AuthError;
+use crate::custom_errors::app::AppError;
 use crate::utils::jwt_token::generate_jwt;
 use axum::{
     extract::{Json, Extension},
@@ -15,13 +15,13 @@ use uuid::Uuid;
 pub async fn auth_handler(
     Extension(db): Extension<sea_orm::DatabaseConnection>, 
     Json(payload): Json<AuthReq>
-) -> Result<impl IntoResponse, AuthError> {
+) -> Result<impl IntoResponse, AppError> {
     payload.check()?;
     let existing_user = users::Entity::find()
         .filter(users::Column::Email.eq(payload.email.clone()))
         .one(&db)
         .await
-        .map_err(|e| AuthError::DatabaseError(e.to_string()))?;
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
     
     let user_model = match existing_user {
         Some(user) => {
@@ -30,7 +30,7 @@ pub async fn auth_handler(
             active_user
                 .update(&db)
                 .await
-                .map_err(|e| AuthError::DatabaseError(e.to_string()))?
+                .map_err(|e| AppError::DatabaseError(e.to_string()))?
         },
         None => {
             let new_user = users::ActiveModel {
@@ -46,7 +46,7 @@ pub async fn auth_handler(
             new_user
                 .insert(&db)
                 .await
-                .map_err(|e| AuthError::DatabaseError(e.to_string()))?
+                .map_err(|e| AppError::DatabaseError(e.to_string()))?
         }
     };
 

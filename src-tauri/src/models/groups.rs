@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::custom_errors::groups::GroupError;
+use crate::custom_errors::app::AppError;
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct CreateGroupReq{
     pub group_name: String,
@@ -18,9 +18,9 @@ impl CreateGroupReq{
             auto_logo,
         }
     }
-    pub fn check(&mut self)-> Result<(),GroupError>{
+    pub fn check(&mut self)-> Result<(),AppError>{
         if self.group_name.trim().is_empty() {
-            return Err(GroupError::GroupReqValidationError(
+            return Err(AppError::ValidationError(
                 "Group Name cannot be empty".into(),
             ));
         }

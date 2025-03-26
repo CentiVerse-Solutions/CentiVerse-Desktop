@@ -1,7 +1,7 @@
 use chrono::Utc;
 use crate::models::groups::{GroupRes,CreateGroupReq};
 use crate::entities::groups::{self, ActiveModel};
-use crate::custom_errors::groups::GroupError;
+use crate::custom_errors::app::AppError;
 use axum::{
     extract::{Json, Extension},
     response::IntoResponse,
@@ -17,7 +17,7 @@ pub async fn create_group_handler(
     Extension(user_id): Extension<Uuid>,
     Extension(db): Extension<sea_orm::DatabaseConnection>, 
     Json(mut payload): Json<CreateGroupReq>
-) -> Result<impl IntoResponse, GroupError> {
+) -> Result<impl IntoResponse, AppError> {
     payload.check()?;
 
     let new_group = groups::ActiveModel {
@@ -33,7 +33,7 @@ pub async fn create_group_handler(
     let inserted = new_group
         .insert(&db)
         .await
-        .map_err(|e| GroupError::DatabaseError(e.to_string()))?;
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
     Ok((StatusCode::CREATED, AxumJson(GroupRes::from(inserted))))
 }

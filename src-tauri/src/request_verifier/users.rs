@@ -9,7 +9,7 @@ use crate::entities::users;
 use uuid::Uuid;
 use jsonwebtoken::{decode, DecodingKey, Validation, Algorithm, TokenData};
 use crate::models::auth::Claims;
-use crate::custom_errors::auth::AuthError;
+use crate::custom_errors::app::AppError;
 use dotenv::dotenv;
 use std::env;
 
@@ -17,7 +17,7 @@ pub async fn verify_user<B>(
     Extension(db): Extension<DatabaseConnection>,
     mut req: Request<B>,
     next: Next<B>,
-) -> Result<Response, AuthError> {
+) -> Result<Response, AppError> {
 
     dotenv().ok();
     let jwt_secret =env::var("JWT_SECRET").expect("JWT_SECRET must be set");
@@ -37,26 +37,26 @@ pub async fn verify_user<B>(
                 }
             })
         })
-        .ok_or_else(|| AuthError::Unauthorized("Missing auth_token cookie".into()))?;
+        .ok_or_else(|| AppError::Unauthorized("Missing auth_token cookie".into()))?;
 
     
     let decoding_key = DecodingKey::from_secret(jwt_secret.as_ref());
     let token_data: TokenData<Claims> = decode::<Claims>(&token, &decoding_key, &Validation::new(Algorithm::HS256))
-        .map_err(|_| AuthError::Unauthorized("Invalid token".into()))?;
+        .map_err(|_| AppError::Unauthorized("Invalid token".into()))?;
 
     
     let user_id = Uuid::parse_str(&token_data.claims.sub)
-        .map_err(|_| AuthError::Unauthorized("Invalid user id in token".into()))?;
+        .map_err(|_| AppError::Unauthorized("Invalid user id in token".into()))?;
 
     
     let existing_user = users::Entity::find()
         .filter(users::Column::Id.eq(user_id))
         .one(&db)
         .await
-        .map_err(|_| AuthError::InternalServerError)?;
+        .map_err(|_| AppError::InternalServerError)?;
 
     if existing_user.is_none() {
-        return Err(AuthError::UserNotFound("User not found".into()));
+        return Err(AppError::NotFound("User not found".into()));
     }
     req.extensions_mut().insert(user_id);
     Ok(next.run(req).await)

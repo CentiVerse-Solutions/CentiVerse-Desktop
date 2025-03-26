@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::custom_errors::{activities::{ActivityError}};
+use crate::custom_errors::app::AppError;
 use serde_json::json;
 
 #[derive(Debug, Clone, PartialEq,Deserialize)]
@@ -33,16 +33,16 @@ impl CreateActivityReq{
         }
     }
 
-    pub fn check(&mut self) -> Result<(), ActivityError> {
+    pub fn check(&mut self) -> Result<(), AppError> {
 
         if self.description.trim().is_empty() {
-            return Err(ActivityError::ActivityReqValidationError(
+            return Err(AppError::ValidationError(
                 "Description cannot be empty".into(),
             ));
         }
         
         if self.group_id == Uuid::nil() {
-            return Err(ActivityError::ActivityReqValidationError(
+            return Err(AppError::ValidationError(
                 "Group Id cannot be empty".into(),
             ));
         }
@@ -54,23 +54,23 @@ impl CreateActivityReq{
         }
     
         if self.amount <= Decimal::ZERO {
-            return Err(ActivityError::ActivityReqValidationError("Amount must be greater than zero".into()));
+            return Err(AppError::ValidationError("Amount must be greater than zero".into()));
         }
 
         if self.split_members.is_empty() || self.split_amounts.is_empty() {
-            return Err(ActivityError::ActivityReqValidationError(
+            return Err(AppError::ValidationError(
                 "Split members and split amounts cannot be empty".into(),
             ));
         }
         if self.split_members.len() != self.split_amounts.len() {
-            return Err(ActivityError::ActivityReqValidationError(
+            return Err(AppError::ValidationError(
                 "Split members and split amounts must have the same length".into(),
             ));
         }
 
         let total_split: Decimal = self.split_amounts.iter().sum();
         if total_split != self.amount {
-            return Err(ActivityError::AmountsDontAddUp(
+            return Err(AppError::AmountsDontAddUp(
                 "Total split amount does not match the main amount".into(),
             ));
         }

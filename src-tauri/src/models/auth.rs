@@ -1,7 +1,7 @@
 use uuid::Uuid;
 use sea_orm::entity::prelude::*;
 use serde::{Serialize, Deserialize};
-use crate::custom_errors::{auth::{AuthError}};
+use crate::custom_errors::app::AppError;
 
 #[derive(Debug, Clone, PartialEq,Deserialize)]
 pub struct AuthReq {
@@ -29,21 +29,21 @@ impl AuthReq{
         }
     }
 
-    pub fn check(&self) -> Result<(), AuthError> {
+    pub fn check(&self) -> Result<(), AppError> {
         if self.oauth_provider.trim().is_empty() {
-            return Err(AuthError::AuthReqValidationError("OAuth provider is required".into()));
+            return Err(AppError::ValidationError("OAuth provider is required".into()));
         }
         if self.oauth_id.trim().is_empty() {
-            return Err(AuthError::AuthReqValidationError("OAuth ID is required".into()));
+            return Err(AppError::ValidationError("OAuth ID is required".into()));
         }
         if self.username.trim().len() < 3 {
-            return Err(AuthError::AuthReqValidationError("Username must not be empty".into()));
+            return Err(AppError::ValidationError("Username must not be empty".into()));
         }
         if !self.email.contains('@') {
-            return Err(AuthError::AuthReqValidationError("Invalid email format".into()));
+            return Err(AppError::ValidationError("Invalid email format".into()));
         }
         if self.upi_id.trim().len() < 5 {
-            return Err(AuthError::AuthReqValidationError("UPI ID must Username must not be empty".into()));
+            return Err(AppError::ValidationError("UPI ID must Username must not be empty".into()));
         }
         Ok(())
     }
