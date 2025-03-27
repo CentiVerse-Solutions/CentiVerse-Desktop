@@ -1,0 +1,170 @@
+/* Rose Gold Color Palette */
+:root {
+  --cream: #ddd8c4;
+  --sage: #a3c9a8;
+  --teal-light: #84b59f;
+  --teal: #69a297;
+  --teal-dark: #50808e;
+}
+
+.button {
+  font-family: inherit;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  text-decoration: none;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+  z-index: -1;
+}
+
+.button:focus {
+  outline: none;
+}
+
+.button:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Ripple animation */
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Variants */
+.button-contained {
+  background-color: var(--rose-gold);
+  color: var(--text-light);
+  box-shadow: 0 2px 10px rgba(183, 110, 121, 0.3);
+}
+
+.button-contained:hover:not(:disabled) {
+  background-color: var(--rose-gold-dark);
+  box-shadow: 0 4px 15px rgba(183, 110, 121, 0.4);
+  transform: translateY(-3px);
+}
+
+.button-contained:active:not(:disabled) {
+  background-color: var(--rose-gold-dark);
+  box-shadow: 0 2px 5px rgba(183, 110, 121, 0.4);
+  transform: translateY(0);
+}
+
+.button-outlined {
+  background-color: transparent;
+  color: var(--rose-gold);
+  border: 2px solid var(--rose-gold);
+  box-shadow: 0 2px 5px rgba(183, 110, 121, 0.1);
+}
+
+.button-outlined:hover:not(:disabled) {
+  background-color: rgba(183, 110, 121, 0.05);
+  border-color: var(--rose-gold-dark);
+  color: var(--rose-gold-dark);
+  box-shadow: 0 4px 8px rgba(183, 110, 121, 0.15);
+  transform: translateY(-3px);
+}
+
+.button-outlined:active:not(:disabled) {
+  background-color: rgba(183, 110, 121, 0.1);
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(183, 110, 121, 0.1);
+}
+
+.button-text {
+  background-color: transparent;
+  color: var(--rose-gold);
+}
+
+.button-text:hover:not(:disabled) {
+  background-color: rgba(183, 110, 121, 0.05);
+  transform: translateY(-2px);
+}
+
+.button-text:active:not(:disabled) {
+  background-color: rgba(183, 110, 121, 0.1);
+  transform: translateY(0);
+}
+
+/* Sizes */
+.button-small {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.button-medium {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.button-large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+/* Width */
+.button-full-width {
+  width: 100%;
+}
+
+/* Disabled state */
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+/* Button icon */
+.button-icon {
+  display: flex;
+  align-items: center;
+}
+
+/* Button with icon animation */
+.button:hover .button-icon {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

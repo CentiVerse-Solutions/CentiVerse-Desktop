@@ -1,0 +1,236 @@
+/* Nature-Inspired Color Palette */
+:root {
+  --teal: #69a297;
+  --sage: #a3c9a8;
+  --teal-light: #84b59f;
+  --teal-dark: #50808e;
+  --dark-accent: #2c3e50;
+  --cream: #ddd8c4;
+  --text-dark: #333333;
+  --text-light: #ffffff;
+}
+
+/* Header with Glassmorphism */
+.landing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 2rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: fixed;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.landing-header.scrolled {
+  background-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--sage) 0%, var(--teal) 100%);
+  box-shadow: 0 2px 5px rgba(105, 162, 151, 0.2);
+  margin-right: 0.75rem;
+}
+
+.logo {
+  height: 18px;
+  transition: transform 0.3s ease;
+  filter: brightness(0) invert(1);
+}
+
+.logo-container:hover .logo {
+  transform: rotate(5deg) scale(1.1);
+}
+
+.logo-container h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--teal-dark);
+  margin: 0;
+  background: linear-gradient(135deg, var(--teal) 0%, var(--dark-accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-left: auto; /* Push everything to the right */
+}
+
+.main-nav {
+  display: flex;
+  gap: 2rem;
+}
+
+/* Enhanced nav links with hover effect */
+.nav-link {
+  color: var(--text-dark);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  position: relative;
+  padding: 0.35rem 0.6rem;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+.nav-link-text {
+  position: relative;
+  z-index: 2;
+}
+
+.nav-link::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(to right, var(--teal), var(--teal-light));
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  z-index: 1;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(105, 162, 151, 0);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: all 0.4s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+  z-index: 0;
+  border-radius: 6px;
+}
+
+.nav-link:hover {
+  color: var(--teal-dark);
+}
+
+.nav-link:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.nav-link:hover::after {
+  background-color: rgba(105, 162, 151, 0.08);
+  transform: scaleY(1);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-left: 2rem; /* Add some space between nav and buttons */
+}
+
+/* Styles added to the Interactive Hover Buttons */
+.login-button {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.signup-button {
+  background-color: rgba(105, 162, 151, 0.85) !important;
+}
+
+.mobile-menu-button {
+  display: none; /* Completely hidden on desktop */
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(163, 201, 168, 0.4);
+  color: var(--teal);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-button:hover {
+  background: rgba(105, 162, 151, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .landing-header {
+    width: 95%;
+    padding: 0.4rem 1.5rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .landing-header {
+    padding: 0.8rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .landing-header {
+    width: 95%;
+    top: 0.5rem;
+    padding: 0.4rem 1.2rem;
+  }
+
+  .main-nav {
+    display: none;
+  }
+
+  .mobile-menu-button {
+    display: flex;
+    margin-left: auto; /* Push to right on mobile */
+  }
+
+  .auth-buttons {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .landing-header {
+    border-radius: 12px;
+  }
+
+  .logo-container h1 {
+    font-size: 1.2rem;
+  }
+}

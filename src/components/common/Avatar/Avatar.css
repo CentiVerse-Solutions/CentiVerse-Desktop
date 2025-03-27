@@ -1,0 +1,136 @@
+.avatar {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--rose-gold-lighter);
+  color: var(--rose-gold-dark);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Avatar sizes */
+.avatar-small {
+  width: 32px;
+  height: 32px;
+  font-size: 0.8rem;
+}
+
+.avatar-medium {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.avatar-large {
+  width: 56px;
+  height: 56px;
+  font-size: 1.2rem;
+}
+
+.avatar-xlarge {
+  width: 72px;
+  height: 72px;
+  font-size: 1.5rem;
+}
+
+/* Avatar image */
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Initials fallback */
+.avatar-initials {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Clickable avatar */
+.avatar.clickable {
+  cursor: pointer;
+}
+
+.avatar.clickable:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.avatar.clickable:hover .avatar-img {
+  transform: scale(1.1);
+}
+
+/* Status indicator */
+.status-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 2s infinite;
+}
+
+.avatar-small .status-indicator {
+  width: 10px;
+  height: 10px;
+}
+
+.avatar-large .status-indicator {
+  width: 16px;
+  height: 16px;
+}
+
+.avatar-xlarge .status-indicator {
+  width: 18px;
+  height: 18px;
+}
+
+.status-positive {
+  background-color: var(--settled-color);
+}
+
+.status-negative {
+  background-color: var(--you-owe-color);
+}
+
+.status-neutral {
+  background-color: var(--owes-you-color);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+.status-negative {
+  animation-name: pulseNegative;
+}
+
+@keyframes pulseNegative {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(255, 152, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+}
