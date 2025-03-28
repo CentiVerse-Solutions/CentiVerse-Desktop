@@ -38,3 +38,15 @@ pub async fn create_group_handler(
     Ok((StatusCode::CREATED, AxumJson(GroupRes::from(inserted))))
 }
 
+pub async fn get_all_groups_handler(
+    Extension(user_id): Extension<Uuid>,
+    Extension(db): Extension<sea_orm::DatabaseConnection>,
+) -> Result<impl IntoResponse, AppError> {
+    let groups = groups::Entity::find()
+        .filter(groups::Column::CreatorId.eq(user_id)) 
+        .all(&db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+    Ok((StatusCode::OK, AxumJson(groups)))
+}
