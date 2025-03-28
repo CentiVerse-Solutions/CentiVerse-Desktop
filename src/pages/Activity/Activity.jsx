@@ -10,11 +10,15 @@ import {
     Tag,
     ChevronDown,
     ChevronUp,
-    User
+    User,
+    CheckCircle,
+    ArrowUpRight,
+    ArrowDownLeft,
+    ChevronRight
 } from 'lucide-react';
 import SearchBar from '../../components/common/SearchBar/SearchBar';
-import {Button} from '../../components/common/Button/Button';
-import {Avatar} from '../../components/common/Avatar/Avatar';
+import { Button } from '../../components/common/Button/Button';
+import { Avatar } from '../../components/common/Avatar/Avatar';
 import { mockExpenses, mockGroups, mockFriends } from '../../utils/mockData';
 import './Activity.css';
 
@@ -26,23 +30,84 @@ const Activity = () => {
     const [filterType, setFilterType] = useState('all');
     const [filterGroup, setFilterGroup] = useState('all');
     const [filterCategory, setFilterCategory] = useState('all');
+    const [filterSettlement, setFilterSettlement] = useState('all'); // 'all', 'pending', 'settled'
     const [showFilters, setShowFilters] = useState(false);
+    const [summary, setSummary] = useState({
+        youOwe: 0,
+        youAreOwed: 0,
+        netBalance: 0
+    });
 
-    // Get all expenses with group info
+    // Current user ID (in a real app this would come from auth context)
+    const currentUserId = 1; // Assuming user with ID 1 is "You"
+
+    // Get all expenses with group info, settlement status, and relevant to the current user
     useEffect(() => {
-        const processedExpenses = mockExpenses.map(expense => {
+        // Process expenses to add settlement information
+        // In a real app, this would come from your backend
+        const enhancedExpenses = mockExpenses.map(expense => {
             // Find the group this expense belongs to
             const group = mockGroups.find(g => g.id === expense.groupId);
+
+            // Calculate settlement info
+            const userIsPayer = expense.paidBy.id === currentUserId;
+            const userIsParticipant = expense.participants.some(p => p.id === currentUserId);
+
+            // Skip if user is not involved in this expense
+            if (!userIsPayer && !userIsParticipant) {
+                return null;
+            }
+
+            const perPersonAmount = expense.amount / expense.participants.length;
+            let settlementType = '';
+            let settlementAmount = 0;
+
+            if (userIsPayer) {
+                // User paid, so others owe them
+                settlementType = 'youAreOwed';
+                // Total amount minus user's share
+                settlementAmount = expense.amount - perPersonAmount;
+            } else {
+                // User didn't pay, so they owe the payer
+                settlementType = 'youOwe';
+                settlementAmount = perPersonAmount;
+            }
+
+            // Random settlement status for demo purposes
+            // In a real app, this would come from your backend
+            const isSettled = Math.random() > 0.7;
+            const settledDate = isSettled ?
+                new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 14) : null;
 
             return {
                 ...expense,
                 group,
                 type: 'expense',
+                settlementType,
+                settlementAmount,
+                isSettled,
+                settledDate,
+                userInvolved: true
             };
+        }).filter(expense => expense !== null); // Remove null entries (where user is not involved)
+
+        // Calculate summary totals
+        const youOwe = enhancedExpenses
+            .filter(e => e.settlementType === 'youOwe' && !e.isSettled)
+            .reduce((sum, e) => sum + e.settlementAmount, 0);
+
+        const youAreOwed = enhancedExpenses
+            .filter(e => e.settlementType === 'youAreOwed' && !e.isSettled)
+            .reduce((sum, e) => sum + e.settlementAmount, 0);
+
+        setSummary({
+            youOwe,
+            youAreOwed,
+            netBalance: youAreOwed - youOwe
         });
 
         // Sort by date (newest first)
-        const sortedActivities = processedExpenses.sort((a, b) =>
+        const sortedActivities = enhancedExpenses.sort((a, b) =>
             new Date(b.date) - new Date(a.date)
         );
 
@@ -68,12 +133,12 @@ const Activity = () => {
         if (filterType !== 'all') {
             if (filterType === 'paid') {
                 result = result.filter(activity =>
-                    activity.paidBy.name === 'You'
+                    activity.paidBy.id === currentUserId
                 );
             } else if (filterType === 'received') {
                 result = result.filter(activity =>
-                    activity.paidBy.name !== 'You' &&
-                    activity.participants.some(p => p.name === 'You')
+                    activity.paidBy.id !== currentUserId &&
+                    activity.participants.some(p => p.id === currentUserId)
                 );
             }
         }
@@ -92,8 +157,17 @@ const Activity = () => {
             );
         }
 
+        // Apply settlement filter
+        if (filterSettlement !== 'all') {
+            if (filterSettlement === 'pending') {
+                result = result.filter(activity => !activity.isSettled);
+            } else if (filterSettlement === 'settled') {
+                result = result.filter(activity => activity.isSettled);
+            }
+        }
+
         setFilteredActivities(result);
-    }, [searchQuery, filterType, filterGroup, filterCategory, activities]);
+    }, [searchQuery, filterType, filterGroup, filterCategory, filterSettlement, activities]);
 
     // Toggle expense details expansion
     const toggleExpenseDetails = (expenseId) => {
@@ -131,6 +205,18 @@ const Activity = () => {
             day: 'numeric',
             year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
         });
+    };
+
+    // Handle settling an expense
+    const handleSettle = (activityId) => {
+        // In a real app, you'd call your API here
+        setActivities(prev =>
+            prev.map(activity =>
+                activity.id === activityId
+                    ? { ...activity, isSettled: true, settledDate: new Date() }
+                    : activity
+            )
+        );
     };
 
     // Group activities by month and year
@@ -212,6 +298,57 @@ const Activity = () => {
                     >
                         Filter
                     </Button>
+                </div>
+            </motion.div>
+
+            {/* New Settlement Summary Section */}
+            <motion.div
+                className="act-settlement-summary"
+                variants={itemVariants}
+            >
+                <div className="act-settlement-card outgoing">
+                    <div className="act-settlement-icon">
+                        <ArrowUpRight size={20} />
+                    </div>
+                    <div className="act-settlement-info">
+                        <h3 className="act-settlement-label">You owe</h3>
+                        <div className="act-settlement-amount">{formatCurrency(summary.youOwe)}</div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="small"
+                        className="act-view-btn"
+                        icon={<ChevronRight size={16} />}
+                    >
+                        View
+                    </Button>
+                </div>
+
+                <div className="act-settlement-card incoming">
+                    <div className="act-settlement-icon">
+                        <ArrowDownLeft size={20} />
+                    </div>
+                    <div className="act-settlement-info">
+                        <h3 className="act-settlement-label">You are owed</h3>
+                        <div className="act-settlement-amount">{formatCurrency(summary.youAreOwed)}</div>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="small"
+                        className="act-view-btn"
+                        icon={<ChevronRight size={16} />}
+                    >
+                        View
+                    </Button>
+                </div>
+
+                <div className={`act-settlement-card balance ${summary.netBalance >= 0 ? 'positive' : 'negative'}`}>
+                    <div className="act-settlement-info">
+                        <h3 className="act-settlement-label">Net balance</h3>
+                        <div className="act-settlement-amount">
+                            {summary.netBalance >= 0 ? '+' : ''}{formatCurrency(summary.netBalance)}
+                        </div>
+                    </div>
                 </div>
             </motion.div>
 
@@ -298,17 +435,45 @@ const Activity = () => {
                             ))}
                         </div>
                     </div>
+
+                    {/* New Settlement Status Filter */}
+                    <div className="act-filter-section">
+                        <div className="act-filter-label">
+                            <CheckCircle size={16} />
+                            <span>Settlement Status</span>
+                        </div>
+                        <div className="act-filter-options">
+                            <button
+                                className={`act-filter-option ${filterSettlement === 'all' ? 'active' : ''}`}
+                                onClick={() => setFilterSettlement('all')}
+                            >
+                                All
+                            </button>
+                            <button
+                                className={`act-filter-option ${filterSettlement === 'pending' ? 'active' : ''}`}
+                                onClick={() => setFilterSettlement('pending')}
+                            >
+                                Pending
+                            </button>
+                            <button
+                                className={`act-filter-option ${filterSettlement === 'settled' ? 'active' : ''}`}
+                                onClick={() => setFilterSettlement('settled')}
+                            >
+                                Settled
+                            </button>
+                        </div>
+                    </div>
                 </motion.div>
             )}
 
             <div className="act-status">
                 <p className="act-results-count">
                     {filteredActivities.length} {filteredActivities.length === 1 ? 'activity' : 'activities'} found
-                    {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all') &&
+                    {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all' || filterSettlement !== 'all') &&
                         ' with current filters'}
                 </p>
 
-                {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all') && (
+                {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all' || filterSettlement !== 'all') && (
                     <button
                         className="act-clear-filters"
                         onClick={() => {
@@ -316,6 +481,7 @@ const Activity = () => {
                             setFilterType('all');
                             setFilterGroup('all');
                             setFilterCategory('all');
+                            setFilterSettlement('all');
                         }}
                     >
                         Clear all filters
@@ -341,7 +507,7 @@ const Activity = () => {
                                         whileHover={{ scale: 1.01 }}
                                     >
                                         <div
-                                            className="act-card"
+                                            className={`act-card ${activity.isSettled ? 'settled' : ''} ${activity.settlementType}`}
                                             onClick={() => toggleExpenseDetails(activity.id)}
                                         >
                                             <div className="act-date">
@@ -355,9 +521,21 @@ const Activity = () => {
                                             <div className="act-main">
                                                 <div className="act-card-header">
                                                     <div className="act-basic-info">
-                                                        <h3 className="act-description">
-                                                            {activity.description}
-                                                        </h3>
+                                                        <div className="act-title-row">
+                                                            <h3 className="act-description">
+                                                                {activity.description}
+                                                            </h3>
+                                                            {activity.isSettled ? (
+                                                                <span className="act-status-tag settled">
+                                                                    <CheckCircle size={12} />
+                                                                    Settled
+                                                                </span>
+                                                            ) : (
+                                                                <span className="act-status-tag pending">
+                                                                    Pending
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <span className="act-meta">
                                                             <span className="act-group">
                                                                 {activity.group.name}
@@ -369,11 +547,29 @@ const Activity = () => {
                                                     </div>
 
                                                     <div className="act-amount-container">
+                                                        <div className={`act-settlement-indicator ${activity.settlementType}`}>
+                                                            {activity.settlementType === 'youOwe' ? (
+                                                                <>
+                                                                    <ArrowUpRight size={14} />
+                                                                    <span>You owe</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ArrowDownLeft size={14} />
+                                                                    <span>Owes you</span>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                         <span className="act-amount">
                                                             {formatCurrency(activity.amount)}
                                                         </span>
+                                                        <span className="act-settlement-amount">
+                                                            Your share: {formatCurrency(activity.settlementAmount)}
+                                                        </span>
                                                         <span className="act-time">
-                                                            {formatDate(activity.date)}
+                                                            {activity.isSettled
+                                                                ? `Settled ${formatDate(activity.settledDate)}`
+                                                                : formatDate(activity.date)}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -448,7 +644,57 @@ const Activity = () => {
                                                 </div>
 
                                                 <div className="act-details-section">
-                                                    <h4 className="act-details-title">Details</h4>
+                                                    <h4 className="act-details-title">Settlement Details</h4>
+                                                    <div className="act-details-grid">
+                                                        <div className="act-detail-item">
+                                                            <span className="act-detail-label">Status</span>
+                                                            <span className={`act-detail-value ${activity.isSettled ? 'settled-text' : 'pending-text'}`}>
+                                                                {activity.isSettled ? 'Settled' : 'Pending settlement'}
+                                                            </span>
+                                                        </div>
+
+                                                        {activity.isSettled && (
+                                                            <div className="act-detail-item">
+                                                                <span className="act-detail-label">Settled On</span>
+                                                                <span className="act-detail-value">
+                                                                    {new Date(activity.settledDate).toLocaleDateString('en-US', {
+                                                                        month: 'long',
+                                                                        day: 'numeric',
+                                                                        year: 'numeric'
+                                                                    })}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        <div className="act-detail-item">
+                                                            <span className="act-detail-label">Total Amount</span>
+                                                            <span className="act-detail-value">
+                                                                {formatCurrency(activity.amount)}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="act-detail-item">
+                                                            <span className="act-detail-label">Your Share</span>
+                                                            <span className="act-detail-value">
+                                                                {formatCurrency(activity.amount / activity.participants.length)}
+                                                            </span>
+                                                        </div>
+
+                                                        <div className="act-detail-item">
+                                                            <span className="act-detail-label">Settlement</span>
+                                                            <span className="act-detail-value">
+                                                                {activity.settlementType === 'youOwe' ? (
+                                                                    <span className="act-owe-text">You owe {activity.paidBy.name}</span>
+                                                                ) : (
+                                                                    <span className="act-owed-text">Others owe you</span>
+                                                                )}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="act-details-section">
+                                                    <h4 className="act-details-title">Expense Details</h4>
                                                     <div className="act-details-grid">
                                                         <div className="act-detail-item">
                                                             <span className="act-detail-label">Date</span>
@@ -469,20 +715,6 @@ const Activity = () => {
                                                         </div>
 
                                                         <div className="act-detail-item">
-                                                            <span className="act-detail-label">Total Amount</span>
-                                                            <span className="act-detail-value">
-                                                                {formatCurrency(activity.amount)}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="act-detail-item">
-                                                            <span className="act-detail-label">Per Person</span>
-                                                            <span className="act-detail-value">
-                                                                {formatCurrency(activity.amount / activity.participants.length)}
-                                                            </span>
-                                                        </div>
-
-                                                        <div className="act-detail-item">
                                                             <span className="act-detail-label">Category</span>
                                                             <span className="act-detail-value">
                                                                 {activity.category.icon} {activity.category.name}
@@ -492,16 +724,24 @@ const Activity = () => {
                                                 </div>
 
                                                 <div className="act-details-actions">
-                                                    <Button
-                                                        variant="outline"
-                                                        className="act-details-btn"
-                                                        icon={<DollarSign size={16} />}
-                                                    >
-                                                        Settle
-                                                    </Button>
+                                                    {!activity.isSettled && (
+                                                        <Button
+                                                            variant="primary"
+                                                            className="act-details-btn"
+                                                            icon={<DollarSign size={16} />}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleSettle(activity.id);
+                                                            }}
+                                                        >
+                                                            {activity.settlementType === 'youOwe'
+                                                                ? 'Mark as Paid'
+                                                                : 'Mark as Received'}
+                                                        </Button>
+                                                    )}
 
                                                     <Button
-                                                        variant="primary"
+                                                        variant={activity.isSettled ? "primary" : "outline"}
                                                         className="act-details-btn"
                                                     >
                                                         View Full Details
@@ -517,12 +757,13 @@ const Activity = () => {
                 ) : (
                     <div className="act-no-results">
                         <p>No activities found matching your criteria.</p>
-                        {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all') && (
+                        {(searchQuery || filterType !== 'all' || filterGroup !== 'all' || filterCategory !== 'all' || filterSettlement !== 'all') && (
                             <Button onClick={() => {
                                 setSearchQuery('');
                                 setFilterType('all');
                                 setFilterGroup('all');
                                 setFilterCategory('all');
+                                setFilterSettlement('all');
                             }}>
                                 Clear Filters
                             </Button>

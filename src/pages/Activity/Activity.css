@@ -1,4 +1,4 @@
-/* Activity specific styles - completely renamed to avoid conflicts */
+/* Activity specific styles - with settlement features */
 .act-page {
   padding: 1.5rem;
   max-width: 1000px;
@@ -33,6 +33,93 @@
 
 .act-filter-btn {
   white-space: nowrap;
+}
+
+/* Settlement Summary */
+.act-settlement-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.act-settlement-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.act-settlement-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.act-settlement-card.outgoing .act-settlement-icon {
+  background-color: #ffefef;
+  color: #e53935;
+}
+
+.act-settlement-card.incoming .act-settlement-icon {
+  background-color: #e3f2fd;
+  color: #1e88e5;
+}
+
+.act-settlement-card.balance {
+  display: flex;
+  justify-content: center;
+}
+
+.act-settlement-card.balance.positive {
+  background-color: #e8f5e9;
+}
+
+.act-settlement-card.balance.negative {
+  background-color: #ffebee;
+}
+
+.act-settlement-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.act-settlement-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.act-settlement-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0 0 0.25rem;
+}
+
+.act-settlement-amount {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.act-settlement-card.balance.positive .act-settlement-amount {
+  color: #2e7d32;
+}
+
+.act-settlement-card.balance.negative .act-settlement-amount {
+  color: #c62828;
+}
+
+.act-view-btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8125rem;
 }
 
 /* Filter Container */
@@ -197,6 +284,78 @@
   box-shadow: var(--shadow-md);
 }
 
+/* Settlement status indicators */
+.act-card.settled {
+  background-color: #f8f8f8;
+  box-shadow: none;
+}
+
+.act-card.youOwe {
+  border-left: 4px solid #e53935;
+}
+
+.act-card.youAreOwed {
+  border-left: 4px solid #2e7d32;
+}
+
+.act-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.act-status-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+}
+
+.act-status-tag.settled {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.act-status-tag.pending {
+  background-color: #fff3e0;
+  color: #ef6c00;
+}
+
+.act-settlement-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.act-settlement-indicator.youOwe {
+  color: #e53935;
+}
+
+.act-settlement-indicator.youAreOwed {
+  color: #2e7d32;
+}
+
+.act-settlement-amount {
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 0.25rem;
+}
+
+.act-owe-text {
+  color: #e53935;
+}
+
+.act-owed-text {
+  color: #2e7d32;
+}
+
 .act-date {
   padding: 0.75rem 0.5rem 0.75rem 1rem;
   display: flex;
@@ -241,7 +400,7 @@
 .act-description {
   font-size: 1.0625rem;
   font-weight: 600;
-  margin: 0 0 0.25rem;
+  margin: 0;
   color: var(--text-dark);
   white-space: nowrap;
   overflow: hidden;
@@ -259,7 +418,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .act-amount {
@@ -418,6 +577,14 @@
   text-decoration: underline;
 }
 
+.act-detail-value.settled-text {
+  color: #2e7d32;
+}
+
+.act-detail-value.pending-text {
+  color: #ef6c00;
+}
+
 .act-details-actions {
   display: flex;
   gap: 0.75rem;
@@ -463,6 +630,10 @@
 
   .act-filter-btn {
     width: 100%;
+  }
+
+  .act-settlement-summary {
+    grid-template-columns: 1fr;
   }
 
   .act-card {
