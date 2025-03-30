@@ -28,8 +28,16 @@ pub async fn check_user_exists_in_group(
         .one(db)
         .await
         .map_err(|_| AppError::InternalServerError)?;
+    
+    let user2 = groups::Entity::find()
+        .filter(groups::Column::Id.eq(group_id))
+        .filter(groups::Column::CreatorId.eq(user_id))
+        .one(db)
+        .await
+        .map_err(|_| AppError::InternalServerError)?;
 
-    if user.is_none() {
+
+    if user.is_none() && user2.is_none() {
         return Err(AppError::UserNotInGroup("User not found in group".into()));
     }
 
