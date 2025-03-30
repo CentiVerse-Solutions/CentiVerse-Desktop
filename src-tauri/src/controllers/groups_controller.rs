@@ -8,8 +8,10 @@ use axum::{
     http::StatusCode,
     Json as AxumJson,
 };
+use dotenv::dotenv;
+use std::env;
 use serde_json::json;
-use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait};
+use sea_orm::{EntityTrait, ActiveModelTrait, Set, QueryFilter, ColumnTrait, query::* , entity::*};
 use uuid::Uuid;
 
 
@@ -42,11 +44,29 @@ pub async fn get_all_groups_handler(
     Extension(user_id): Extension<Uuid>,
     Extension(db): Extension<sea_orm::DatabaseConnection>,
 ) -> Result<impl IntoResponse, AppError> {
-    let groups = groups::Entity::find()
-        .filter(groups::Column::CreatorId.eq(user_id)) 
-        .all(&db)
-        .await
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    // Retrieve PAGE_SIZE from environment variables and parse it safely
+    let page_size: u64 = env::var("PAGE_SIZE")
+        .map_err(|_| AppError::ConfigError("PAGE_SIZE must be set".to_string()))?
+        .trim()
+        .parse()
+        .map_err(|_| AppError::ConfigError("Invalid PAGE_SIZE value".to_string()))?;
 
-    Ok((StatusCode::OK, AxumJson(groups)))
+   
+    let paginator = groups::Entity::find()
+        .filter(groups::Column::CreatorId.eq(user_id))
+        .paginate(&db, page_size);
+
+    let mut all_groups = Vec::new();
+    let mut page_stream = paginator;
+
+    while let Some(groups_page) = page_stream
+        .fetch_and_next()
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))? 
+    {
+        all_groups.extend(groups_page);
+    }
+
+    Ok((StatusCode::OK, AxumJson(all_groups)))
 }
+

@@ -13,7 +13,10 @@ pub enum AppError {
     
     #[error("Database error: {0}")]
     DatabaseError(String),
-    
+
+    #[error("Database error: {0}")]
+    ConfigError(String),
+
     #[error("Duplicate error: {0}")]
     DuplicateError(String),
     
@@ -38,6 +41,7 @@ impl IntoResponse for AppError {
         let (status, error_message) = match self {
             AppError::ValidationError(err) => (StatusCode::BAD_REQUEST, json!({ "Validation error": err })),
             AppError::DatabaseError(err) => (StatusCode::INTERNAL_SERVER_ERROR, json!({ "Database error": err })),
+            AppError::ConfigError(err) => (StatusCode::INTERNAL_SERVER_ERROR, json!({ "Config error": err })),
             AppError::DuplicateError(err) => (StatusCode::CONFLICT, json!({ "Duplicate error": err })),
             AppError::AmountsDontAddUp(err) => (StatusCode::BAD_REQUEST, json!({ "Amounts Don't Add Up": err })),
             AppError::NotFound(err) => (StatusCode::NOT_FOUND, json!({ "Not Found": err })),
