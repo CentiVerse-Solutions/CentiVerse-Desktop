@@ -26,18 +26,21 @@ pub async fn add_member_to_group(
         return Err(err);
     }
 
-    let new_members: Vec<group_members::ActiveModel> = payload
-        .member_ids
-        .into_iter()
-        .map(|member_id| group_members::ActiveModel {
-            id: Set(Uuid::new_v4()),
-            group_id: Set(payload.group_id),
-            member_id: Set(member_id),
-            joined_at: Set(Utc::now().into()),
-        })
-        .collect();
+    let mut new_members = Vec::new();
+    for member_id in payload.member_ids {
+        if check_user_exists_in_group(&db, payload.group_id, member_id)
+            .await
+            .is_err()
+        {
+            new_members.push(group_members::ActiveModel {
+                id: Set(Uuid::new_v4()),
+                group_id: Set(payload.group_id),
+                member_id: Set(member_id),
+                joined_at: Set(Utc::now().into()),
+            });
+        }
+    }
 
-    
     let new_ids: Vec<Uuid> = new_members
         .iter()
         .map(|am| am.id.as_ref().clone())
@@ -45,6 +48,7 @@ pub async fn add_member_to_group(
 
     
     let _insert_result = group_members::Entity::insert_many(new_members)
+        .on_empty_do_nothing()
         .exec(&db)
         .await
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
