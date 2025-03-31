@@ -28,6 +28,9 @@ pub enum AppError {
     
     #[error("User Not in Group: {0}")]
     UserNotInGroup(String),
+
+    #[error("User Not Admin of Group: {0}")]
+    UserNotAdminOfGroup(String),
     
     #[error("Unauthorized access: {0}")]
     Unauthorized(String),
@@ -46,6 +49,7 @@ impl IntoResponse for AppError {
             AppError::AmountsDontAddUp(err) => (StatusCode::BAD_REQUEST, json!({ "Amounts Don't Add Up": err })),
             AppError::NotFound(err) => (StatusCode::NOT_FOUND, json!({ "Not Found": err })),
             AppError::UserNotInGroup(err) => (StatusCode::FORBIDDEN, json!({ "User Not in Group": err })),
+            AppError::UserNotAdminOfGroup(err) => (StatusCode::FORBIDDEN, json!({ "User Not Admin of Group": err })),
             AppError::Unauthorized(err) => (StatusCode::UNAUTHORIZED, json!({ "Unauthorized": err })),
             AppError::InternalServerError => (StatusCode::INTERNAL_SERVER_ERROR, json!({ "Internal server error": "Something went wrong" })),
         };

@@ -29,16 +29,32 @@ pub async fn check_user_exists_in_group(
         .await
         .map_err(|_| AppError::InternalServerError)?;
     
-    let user2 = groups::Entity::find()
-        .filter(groups::Column::Id.eq(group_id))
-        .filter(groups::Column::CreatorId.eq(user_id))
-        .one(db)
+    let check = check_user_is_admin_in_group(db, group_id, user_id)
         .await
-        .map_err(|_| AppError::InternalServerError)?;
+        .map_err(|_| AppError::UserNotAdminOfGroup("User not admin of group".into()))?;
 
 
-    if user.is_none() && user2.is_none() {
+    if user.is_none() && check.is_err() {
         return Err(AppError::UserNotInGroup("User not found in group".into()));
+    }
+
+    Ok(())
+}
+
+pub async fn check_user_is_admin_in_group(
+    db: &DatabaseConnection, 
+    group_id: Uuid, 
+    user_id: Uuid
+) -> Result<(), AppError> {
+    let user = groups::Entity::find()
+    .filter(groups::Column::Id.eq(group_id))
+    .filter(groups::Column::CreatorId.eq(user_id))
+    .one(db)
+    .await
+    .map_err(|_| AppError::InternalServerError)?;
+
+    if user {
+        return Err(AppError::UserNotAdminOfGroup("User not admin of group".into()));
     }
 
     Ok(())
