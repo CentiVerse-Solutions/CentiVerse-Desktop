@@ -1,10 +1,11 @@
-use uuid::Uuid;
-use sea_orm::entity::prelude::*;
-use serde::{Serialize, Deserialize};
 use crate::custom_errors::app::AppError;
+use rust_decimal::Decimal;
+use sea_orm::entity::prelude::*;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+use uuid::Uuid;
 
-#[derive(Debug, Clone, PartialEq,Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct CreateActivityReq {
     pub description: String,
     pub group_id: Uuid,
@@ -14,14 +15,14 @@ pub struct CreateActivityReq {
     pub expense_logo: Option<String>,
 }
 
-impl CreateActivityReq{
+impl CreateActivityReq {
     pub fn new(
         description: String,
         group_id: Uuid,
         amount: Decimal,
         split_members: Vec<Uuid>,
         split_amounts: Vec<Decimal>,
-        expense_logo: Option<String>
+        expense_logo: Option<String>,
     ) -> Self {
         Self {
             description,
@@ -34,27 +35,26 @@ impl CreateActivityReq{
     }
 
     pub fn check(&mut self) -> Result<(), AppError> {
-
         if self.description.trim().is_empty() {
             return Err(AppError::ValidationError(
                 "Description cannot be empty".into(),
             ));
         }
-        
+
         if self.group_id == Uuid::nil() {
-            return Err(AppError::ValidationError(
-                "Group Id cannot be empty".into(),
-            ));
+            return Err(AppError::ValidationError("Group Id cannot be empty".into()));
         }
-        
+
         if let Some(logo) = &self.expense_logo {
             if logo.trim().is_empty() {
                 self.expense_logo = None;
             }
         }
-    
+
         if self.amount <= Decimal::ZERO {
-            return Err(AppError::ValidationError("Amount must be greater than zero".into()));
+            return Err(AppError::ValidationError(
+                "Amount must be greater than zero".into(),
+            ));
         }
 
         if self.split_members.is_empty() || self.split_amounts.is_empty() {
@@ -74,14 +74,12 @@ impl CreateActivityReq{
                 "Total split amount does not match the main amount".into(),
             ));
         }
-    
+
         Ok(())
     }
-    
 }
 
-
-#[derive(Debug, Clone, PartialEq,Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct ActivityRes {
     pub id: Uuid,
     pub description: String,
@@ -97,7 +95,7 @@ pub struct ActivityRes {
     pub updated_at: DateTimeWithTimeZone,
 }
 
-impl ActivityRes{
+impl ActivityRes {
     pub fn new(
         id: Uuid,
         description: String,
@@ -124,11 +122,10 @@ impl ActivityRes{
             user_involvement,
             expense_logo,
             created_at,
-            updated_at
+            updated_at,
         }
     }
 }
-
 
 impl From<crate::entities::activities::Model> for ActivityRes {
     fn from(activity: crate::entities::activities::Model) -> Self {
@@ -139,12 +136,75 @@ impl From<crate::entities::activities::Model> for ActivityRes {
             activity.group_id,
             activity.time,
             activity.amount,
-            json!(activity.split_members.clone()), 
+            json!(activity.split_members.clone()),
             json!(activity.split_amounts.clone()),
             activity.user_involvement,
             activity.expense_logo,
             activity.created_at,
             activity.updated_at,
         )
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateActivityReq {
+    pub id: Uuid,
+    pub description: Option<String>,
+    pub group_id: Uuid,
+    pub amount: Option<Decimal>,
+    pub split_members: Option<Vec<Uuid>>,
+    pub split_amounts: Option<Vec<Decimal>>,
+    pub expense_logo: Option<Option<String>>, // Double Option to handle setting to null
+}
+
+impl UpdateActivityReq {
+    pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
+        // Manual validation
+        if self.id == Uuid::nil() {
+            return Err(crate::custom_errors::app::AppError::ValidationError(
+                "Activity ID cannot be empty".to_string(),
+            ));
+        }
+
+        if let Some(description) = &self.description {
+            if description.is_empty() || description.len() > 255 {
+                return Err(crate::custom_errors::app::AppError::ValidationError(
+                    "Description must be between 1 and 255 characters".to_string(),
+                ));
+            }
+        }
+
+        if let Some(amount) = &self.amount {
+            if amount.is_sign_negative() {
+                return Err(crate::custom_errors::app::AppError::ValidationError(
+                    "Amount must be positive".to_string(),
+                ));
+            }
+        }
+
+        // Validate split_members and split_amounts have same length
+        if let (Some(split_members), Some(split_amounts)) =
+            (&self.split_members, &self.split_amounts)
+        {
+            if split_members.is_empty() || split_amounts.is_empty() {
+                return Err(AppError::ValidationError(
+                    "Split members and split amounts cannot be empty".into(),
+                ));
+            }
+            if split_members.len() != split_amounts.len() {
+                return Err(crate::custom_errors::app::AppError::ValidationError(
+                    "Split amounts must match the number of split members".to_string(),
+                ));
+            }
+            let total_split: Decimal = split_amounts.iter().sum();
+            if let Some(amount) = &self.amount {
+            if total_split != *amount {
+                return Err(AppError::AmountsDontAddUp(
+                    "Total split amount does not match the main amount".into(),
+                ));
+            }
+        }
+    }
+        Ok(())
     }
 }
