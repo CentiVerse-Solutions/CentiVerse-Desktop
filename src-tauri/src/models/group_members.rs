@@ -76,3 +76,21 @@ impl From<Vec<crate::entities::group_members::Model>> for AddGroupMemberRes {
         Self::new(models.into_iter().map(GroupMember::from).collect())
     }
 }
+
+#[derive(Debug, Clone, PartialEq, Deserialize)]
+pub struct RemoveGroupMemberReq{
+    pub group_id: Uuid,
+    pub member_id: Uuid,
+}
+
+impl RemoveGroupMemberReq{
+    pub fn check(&self)-> Result<(),AppError>{
+        if self.group_id == Uuid::nil() {
+            return Err(AppError::ValidationError("Group Id cannot be empty".into()));
+        }
+        if self.member_id == Uuid::nil() {
+            return Err(AppError::ValidationError("Member Ids cannot be empty".into()));
+        }
+        Ok(())
+    }
+}

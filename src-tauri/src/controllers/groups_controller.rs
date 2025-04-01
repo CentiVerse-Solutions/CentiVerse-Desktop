@@ -1,4 +1,5 @@
 use chrono::Utc;
+use crate::entities::group_members;
 use crate::models::groups::{GroupRes,CreateGroupReq};
 use crate::entities::groups::{self, ActiveModel};
 use crate::custom_errors::app::AppError;
@@ -17,7 +18,7 @@ use uuid::Uuid;
 
 pub async fn create_group_handler(
     Extension(user_id): Extension<Uuid>,
-    Extension(db): Extension<sea_orm::DatabaseConnection>, 
+    Extension(db): Extension<sea_orm::DatabaseConnection>,
     Json(mut payload): Json<CreateGroupReq>
 ) -> Result<impl IntoResponse, AppError> {
     payload.check()?;
@@ -37,8 +38,24 @@ pub async fn create_group_handler(
         .await
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
-    Ok((StatusCode::CREATED, AxumJson(GroupRes::from(inserted))))
+    let new_admin = group_members::ActiveModel {
+        id: Set(Uuid::new_v4()),
+        group_id: Set(inserted.id),
+        member_id: Set(user_id),
+        joined_at: Set(Utc::now().into()),
+    };
+
+    let inserted_admin = new_admin
+        .insert(&db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    
+    Ok((
+        StatusCode::CREATED,
+        Json(GroupRes::from((inserted, inserted_admin)))
+    ))
 }
+
 
 pub async fn get_all_groups_handler(
     Extension(user_id): Extension<Uuid>,
