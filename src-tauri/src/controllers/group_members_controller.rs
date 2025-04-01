@@ -8,7 +8,14 @@ use axum::{
     response::IntoResponse,
     http::StatusCode
 };
-use crate::request_verifier::groups::{check_group_exists,check_user_exists_in_group,check_user_is_admin_in_group};
+use crate::request_verifier::{
+    groups::{
+        check_group_exists,
+        check_user_exists_in_group,
+        check_user_is_admin_in_group
+    },
+    group_members::check_group_member_exists_in_group 
+};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, QueryOrder, QuerySelect, Set};
 use uuid::Uuid;
 
@@ -74,6 +81,7 @@ pub async fn remove_group_member(
     
     check_group_exists(&db, payload.group_id).await?;
     check_user_is_admin_in_group(&db, payload.group_id, user_id).await?;
+    check_group_member_exists_in_group(&db,payload.member_id).await?;
     
     let creator_member_id = group_members::Entity::find()
     .filter(group_members::Column::GroupId.eq(payload.group_id))
@@ -87,6 +95,7 @@ pub async fn remove_group_member(
 
             let first_member = group_members::Entity::find()
             .filter(group_members::Column::GroupId.eq(payload.group_id))
+            .filter(group_members::Column::MemberId.ne(payload.member_id))
             .order_by_asc(group_members::Column::JoinedAt)
             .limit(1)
             .one(&db)
@@ -101,8 +110,9 @@ pub async fn remove_group_member(
     
                 let mut group: groups::ActiveModel = group.unwrap().into();
     
-                group.creator_id = Set(new_admin.member_id.to_owned());
-    
+                group.creator_id = Set(new_admin.member_id);
+                group.updated_at = Set(Utc::now().into());
+                
                 let _updated_group: groups::Model = group
                 .update(&db)
                 .await
