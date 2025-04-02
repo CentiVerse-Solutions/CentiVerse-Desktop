@@ -18,6 +18,8 @@ use crate::request_verifier::{
 use sea_orm::*;
 use serde_json::json;
 use uuid::Uuid;
+use dotenv::dotenv;
+use std::env;
 
 pub async fn create_activity_handler(
     Extension(user_id): Extension<Uuid>,
@@ -158,14 +160,29 @@ pub async fn get_all_activities_handler(
     check_group_exists(&db, payload.group_id).await?;
     check_user_exists_in_group(&db, payload.group_id, user_id).await?;
 
-    let activities = Activity::find()
-        .filter(activities::Column::GroupId.eq(payload.group_id))
-        .order_by_desc(activities::Column::UpdatedAt)
-        .all(&db)
-        .await
-        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    let page_size: u64 = env::var("PAGE_SIZE")
+    .map_err(|_| AppError::ConfigError("PAGE_SIZE must be set".to_string()))?
+    .trim()
+    .parse()
+    .map_err(|_| AppError::ConfigError("Invalid PAGE_SIZE value".to_string()))?;
+
+    let paginator = activities::Entity::find()
+    .filter(activities::Column::GroupId.eq(payload.group_id))
+    .paginate(&db, page_size);
+
+    let mut all_activites = Vec::new();
+    let mut page_stream = paginator;
     
-    let activity_responses: Vec<ActivityRes> = activities
+
+    while let Some(activities_page) = page_stream
+        .fetch_and_next()
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))? 
+    {
+        all_activites.extend(activities_page);
+    }
+
+    let activity_responses: Vec<ActivityRes> = all_activites
         .into_iter()
         .map(ActivityRes::from)
         .collect();
