@@ -217,7 +217,6 @@ pub struct DeleteActivityReq {
 
 impl DeleteActivityReq {
     pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
-        // Manual validation
         if self.activity_id == Uuid::nil() {
             return Err(crate::custom_errors::app::AppError::ValidationError(
                 "Activity ID cannot be empty".to_string(),
@@ -230,6 +229,24 @@ impl DeleteActivityReq {
             ));
         }
 
+        Ok(())
+    }
+}
+
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct GetActivitiesReq {
+    pub group_id: Uuid,
+}
+
+impl GetActivitiesReq {
+    pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
+        if self.group_id == Uuid::nil() {
+            return Err(crate::custom_errors::app::AppError::ValidationError(
+                "Group ID cannot be empty".to_string(),
+            ));
+        }
+        
         Ok(())
     }
 }

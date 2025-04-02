@@ -1,7 +1,7 @@
 use crate::custom_errors::app::AppError;
 use crate::entities::activities::{self, Entity as Activity};
 use crate::models::activities::{
-    ActivityRes, CreateActivityReq, DeleteActivityReq, UpdateActivityReq,
+    ActivityRes, CreateActivityReq, DeleteActivityReq, UpdateActivityReq,GetActivitiesReq,
 };
 use axum::{
     extract::{Extension, Json, Path},
@@ -145,4 +145,30 @@ pub async fn delete_activity_handler(
         return Err(AppError::NotFound("Activity not found".to_string()));
     }
     Ok((StatusCode::OK, Json("Activity Deleted successfully")))
+}
+
+
+pub async fn get_all_activities_handler(
+    Extension(user_id): Extension<Uuid>,
+    Extension(db): Extension<sea_orm::DatabaseConnection>,
+    Json(payload): Json<GetActivitiesReq>,
+) -> Result<impl IntoResponse, AppError> {
+
+    payload.check()?;
+    check_group_exists(&db, payload.group_id).await?;
+    check_user_exists_in_group(&db, payload.group_id, user_id).await?;
+
+    let activities = Activity::find()
+        .filter(activities::Column::GroupId.eq(payload.group_id))
+        .order_by_desc(activities::Column::UpdatedAt)
+        .all(&db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    
+    let activity_responses: Vec<ActivityRes> = activities
+        .into_iter()
+        .map(ActivityRes::from)
+        .collect();
+
+    Ok((StatusCode::OK, AxumJson(activity_responses)))
 }
