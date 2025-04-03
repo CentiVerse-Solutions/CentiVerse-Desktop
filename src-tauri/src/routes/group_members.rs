@@ -8,3 +8,5 @@ pub fn router() -> Router {
         .route("/group_members/remove_member", delete(remove_group_member))
         .layer(middleware::from_fn(verify_user))
 }
+
+// in remove group member we are using the id of member field not member_id field
