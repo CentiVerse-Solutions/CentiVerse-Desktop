@@ -61,3 +61,19 @@ pub async fn verify_user<B>(
     req.extensions_mut().insert(user_id);
     Ok(next.run(req).await)
 }
+
+pub async fn check_user_exists(
+    db: &DatabaseConnection,
+    user_id: Uuid
+) -> Result<(),AppError> {
+    let user = users::Entity::find_by_id(user_id)
+        .one(db)
+        .await
+        .map_err(|_| AppError::InternalServerError)?;
+
+    if user.is_none() {
+        return Err(AppError::NotFound("UserId doesn't exist".into()));
+    }
+
+    Ok(())
+}
