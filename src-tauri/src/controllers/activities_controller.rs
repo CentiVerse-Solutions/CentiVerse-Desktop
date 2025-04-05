@@ -51,6 +51,8 @@ pub async fn create_activity_handler(
         .await
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
+     update_group_total_expense(&db, payload.group_id).await?;
+
     Ok((StatusCode::CREATED, AxumJson(ActivityRes::from(inserted))))
 }
 
@@ -111,6 +113,8 @@ pub async fn update_activity_handler(
         .await
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
+    update_group_total_expense(&db, payload.group_id).await?;
+
     Ok((StatusCode::OK, AxumJson(ActivityRes::from(updated))))
 }
 
@@ -124,19 +128,17 @@ pub async fn delete_activity_handler(
     check_activity_exists_in_group(&db, payload.activity_id, payload.group_id).await?;
     check_user_exists_in_group(&db, payload.group_id, user_id).await?;
 
-    // Find the activity to check ownership
     let activity = Activity::find_by_id(payload.activity_id)
         .one(&db)
         .await
         .map_err(|e| AppError::DatabaseError(e.to_string()))?
         .ok_or(AppError::NotFound("Activity not found".to_string()))?;
-
-    // Check if the user is the owner of the activity
     if activity.paid_by_id != user_id {
         return Err(AppError::Unauthorized(
             "You are not authorized to delete this activity".to_string(),
         ));
     }
+    let activity_amount = activity.amount;
 
     let delete_result = Activity::delete_by_id(payload.activity_id)
         .exec(&db)
@@ -146,6 +148,28 @@ pub async fn delete_activity_handler(
     if delete_result.rows_affected == 0 {
         return Err(AppError::NotFound("Activity not found".to_string()));
     }
+    use crate::entities::groups::{self, Entity as Group};
+    
+    let group = Group::find_by_id(payload.group_id)
+        .one(&db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?
+        .ok_or(AppError::NotFound("Group not found".to_string()))?;
+
+     let current_total = group.total_expense;
+    
+    let mut group_model = group.into_active_model();
+    
+    let new_total = current_total - activity_amount;
+    group_model.total_expense = sea_orm::ActiveValue::Set(new_total);
+    group_model.updated_at = sea_orm::ActiveValue::Set(Utc::now().into());
+    
+    group_model
+        .update(&db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+        
     Ok((StatusCode::OK, Json("Activity Deleted successfully")))
 }
 
@@ -188,4 +212,44 @@ pub async fn get_all_activities_handler(
         .collect();
 
     Ok((StatusCode::OK, AxumJson(activity_responses)))
+}
+
+
+//helper
+async fn update_group_total_expense(
+    db: &DatabaseConnection,
+    group_id: Uuid,
+) -> Result<(), AppError> {
+
+    let total: Option<rust_decimal::Decimal> = Activity::find()
+        .filter(activities::Column::GroupId.eq(group_id))
+        .select_only()
+        .column_as(activities::Column::Amount.sum(), "total_amount")
+        .into_tuple()
+        .one(db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+
+
+    let total = total.unwrap_or_else(|| rust_decimal::Decimal::new(0, 0));
+    
+    use crate::entities::groups::{self, Entity as Group};
+    
+    let group = Group::find_by_id(group_id)
+        .one(db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?
+        .ok_or(AppError::NotFound("Group not found".to_string()))?;
+    
+    let mut group_model = group.into_active_model();
+    
+    group_model.total_expense = sea_orm::ActiveValue::Set(total);
+    group_model.updated_at = sea_orm::ActiveValue::Set(Utc::now().into());
+    group_model
+        .update(db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+    Ok(())
 }
