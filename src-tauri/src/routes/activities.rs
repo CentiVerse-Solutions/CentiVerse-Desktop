@@ -1,5 +1,11 @@
 use axum::{routing::{get, post,patch,delete}, Router, middleware};
-use crate::controllers::activities_controller::{create_activity_handler,update_activity_handler,delete_activity_handler,get_all_activities_handler};
+use crate::controllers::activities_controller::{
+    create_activity_handler,
+    update_activity_handler,
+    delete_activity_handler,
+    get_all_activities_handler,
+    get_dues_handler
+    };
 use crate::request_verifier::users::verify_user;
 pub fn router() -> Router {
     Router::new()
@@ -7,5 +13,6 @@ pub fn router() -> Router {
         .route("/activities/update_activities", patch(update_activity_handler))
         .route("/activities/delete_activities", delete(delete_activity_handler))
         .route("/activities/get_all_activities", get(get_all_activities_handler))
+        .route("/activities/get_dues", post(get_dues_handler))
         .layer(middleware::from_fn(verify_user))
 }

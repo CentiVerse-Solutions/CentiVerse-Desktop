@@ -25,18 +25,13 @@ pub async fn add_member_to_group(
     Json(payload): Json<AddGroupMemberReq>,
 ) -> Result<impl IntoResponse, AppError> {
     payload.check()?;
-
-    if let Err(err) = check_group_exists(&db, payload.group_id).await {
-        return Err(err);
-    }
-
-    if let Err(err) = check_user_exists_in_group(&db, payload.group_id, user_id).await {
-        return Err(err);
-    }
+    check_group_exists(&db, payload.group_id).await?;
+    check_user_exists_in_group(&db, payload.group_id, user_id).await?;
 
     let mut new_members = Vec::new();
     for member_id in payload.member_ids {
-        if check_user_exists_in_group(&db, payload.group_id, member_id)
+        if  !check_group_exists(&db,member_id).await.is_err() && 
+            check_user_exists_in_group(&db, payload.group_id, member_id)
             .await
             .is_err()
         {

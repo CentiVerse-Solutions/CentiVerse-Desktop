@@ -1,8 +1,6 @@
 use crate::custom_errors::app::AppError;
 use crate::entities::activities::{self, Entity as Activity};
-use crate::models::activities::{
-    ActivityRes, CreateActivityReq, DeleteActivityReq, UpdateActivityReq,GetActivitiesReq,
-};
+use crate::models::activities::*;
 use axum::{
     extract::{Extension, Json, Path},
     http::StatusCode,
@@ -10,7 +8,7 @@ use axum::{
     Json as AxumJson,
 };
 use chrono::Utc;
-
+use rust_decimal::Decimal;
 use crate::request_verifier::{
     activities::check_activity_exists_in_group,
     groups::{check_group_exists, check_user_exists_in_group},
@@ -19,6 +17,7 @@ use sea_orm::*;
 use serde_json::json;
 use uuid::Uuid;
 use dotenv::dotenv;
+use std::collections::HashMap;
 use std::env;
 
 pub async fn create_activity_handler(
@@ -215,7 +214,6 @@ pub async fn get_all_activities_handler(
 }
 
 
-//helper
 async fn update_group_total_expense(
     db: &DatabaseConnection,
     group_id: Uuid,
@@ -252,4 +250,109 @@ async fn update_group_total_expense(
         .map_err(|e| AppError::DatabaseError(e.to_string()))?;
 
     Ok(())
+}
+
+pub async fn get_dues_handler(
+    Extension(user_id): Extension<Uuid>,
+    Extension(db): Extension<sea_orm::DatabaseConnection>,
+    Json(payload): Json<GetDuesReq>,
+) -> Result< impl IntoResponse, AppError> {
+    payload.check()?;
+    check_group_exists(&db,payload.group_id).await?;
+    check_user_exists_in_group(&db,payload.group_id,user_id).await?;
+    let response = if payload.simplify {
+        get_dues_simplified(&db, payload.group_id).await?
+    } else {
+        get_dues_detailed(&db, payload.group_id).await?
+    };
+    Ok(response)
+}
+
+
+async fn get_dues_simplified(
+    db: &DatabaseConnection,
+    group_id: Uuid,
+) -> Result<Json<serde_json::Value>, AppError> {
+    use crate::entities::activities::Column as ActivityColumn;
+    let activities = crate::entities::activities::Entity::find()
+        .filter(ActivityColumn::GroupId.eq(group_id))
+        .all(db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    
+    // Map to track net dues per user
+    let mut dues_map: HashMap<Uuid, Decimal> = HashMap::new();
+    for activity in activities {
+        // Deserialize the JSON fields for members and amounts.
+        let split_members: Vec<Uuid> = serde_json::from_value(activity.split_members.clone())
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+        let split_amounts: Vec<Decimal> = serde_json::from_value(activity.split_amounts.clone())
+            .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+
+        // Credit the user who paid the full amount.
+        *dues_map.entry(activity.paid_by_id).or_insert(Decimal::ZERO) += activity.amount;
+        // For each member, debit their share.
+        for (i, member) in split_members.into_iter().enumerate() {
+            let split_amt = split_amounts.get(i).cloned().unwrap_or(Decimal::ZERO);
+            *dues_map.entry(member).or_insert(Decimal::ZERO) -= split_amt;
+        }
+    }
+    // Convert our map into a vector for the response.
+    let dues: Vec<UserDue> = dues_map
+        .into_iter()
+        .map(|(user_id, amount)| UserDue { user_id, amount })
+        .collect();
+    let response = SimplifiedDuesResponse { dues };
+    // Serialize the response into a JSON value.
+    Ok(Json(serde_json::to_value(response).unwrap()))
+}
+
+// For a detailed dues response, we return each activity with its corresponding split breakdown.
+async fn get_dues_detailed(
+    db: &DatabaseConnection,
+    group_id: Uuid,
+) -> Result<Json<serde_json::Value>, AppError> {
+    use crate::entities::activities::Column as ActivityColumn;
+    let activities_list = crate::entities::activities::Entity::find()
+        .filter(ActivityColumn::GroupId.eq(group_id))
+        .all(db)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    
+    let mut dues: Vec<DetailedDue> = Vec::new();
+    for activity in activities_list {
+        let split_details = compute_split_details(activity.split_members.clone(), activity.split_amounts.clone())?;
+        let detailed_due = DetailedDue {
+            activity_id: activity.id,
+            description: activity.description,
+            paid_by: activity.paid_by_id,
+            amount: activity.amount,
+            split_details,
+        };
+        dues.push(detailed_due);
+    }
+    let response = DetailedDuesResponse { dues };
+    Ok(Json(serde_json::to_value(response).unwrap()))
+}
+
+// Compute split details from the JSON values of members and amounts.
+// This function deserializes the JSON into vectors and zips them together.
+fn compute_split_details(
+    members_json: JsonValue,
+    amounts_json: JsonValue,
+) -> Result<Vec<SplitDetail>, AppError> {
+    let members: Vec<Uuid> = serde_json::from_value(members_json)
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    let amounts: Vec<Decimal> = serde_json::from_value(amounts_json)
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+    
+    let details: Vec<SplitDetail> = members
+        .into_iter()
+        .enumerate()
+        .map(|(i, uid)| {
+            let amount = amounts.get(i).cloned().unwrap_or(Decimal::ZERO);
+            SplitDetail { user_id: uid, amount }
+        })
+        .collect();
+    Ok(details)
 }

@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use uuid::Uuid;
 
+
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 pub struct CreateActivityReq {
     pub description: String,
@@ -158,17 +159,17 @@ pub struct UpdateActivityReq {
 }
 
 impl UpdateActivityReq {
-    pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
+    pub fn check(&self) -> Result<(), AppError> {
         // Manual validation
         if self.id == Uuid::nil() {
-            return Err(crate::custom_errors::app::AppError::ValidationError(
+            return Err(AppError::ValidationError(
                 "Activity ID cannot be empty".to_string(),
             ));
         }
 
         if let Some(description) = &self.description {
             if description.is_empty() || description.len() > 255 {
-                return Err(crate::custom_errors::app::AppError::ValidationError(
+                return Err(AppError::ValidationError(
                     "Description must be between 1 and 255 characters".to_string(),
                 ));
             }
@@ -176,7 +177,7 @@ impl UpdateActivityReq {
 
         if let Some(amount) = &self.amount {
             if amount.is_sign_negative() {
-                return Err(crate::custom_errors::app::AppError::ValidationError(
+                return Err(AppError::ValidationError(
                     "Amount must be positive".to_string(),
                 ));
             }
@@ -192,7 +193,7 @@ impl UpdateActivityReq {
                 ));
             }
             if split_members.len() != split_amounts.len() {
-                return Err(crate::custom_errors::app::AppError::ValidationError(
+                return Err(AppError::ValidationError(
                     "Split amounts must match the number of split members".to_string(),
                 ));
             }
@@ -216,15 +217,15 @@ pub struct DeleteActivityReq {
 }
 
 impl DeleteActivityReq {
-    pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
+    pub fn check(&self) -> Result<(), AppError> {
         if self.activity_id == Uuid::nil() {
-            return Err(crate::custom_errors::app::AppError::ValidationError(
+            return Err(AppError::ValidationError(
                 "Activity ID cannot be empty".to_string(),
             ));
         }
 
         if self.group_id == Uuid::nil() {
-            return Err(crate::custom_errors::app::AppError::ValidationError(
+            return Err(AppError::ValidationError(
                 "Group ID cannot be empty".to_string(),
             ));
         }
@@ -240,13 +241,62 @@ pub struct GetActivitiesReq {
 }
 
 impl GetActivitiesReq {
-    pub fn check(&self) -> Result<(), crate::custom_errors::app::AppError> {
+    pub fn check(&self) -> Result<(), AppError> {
         if self.group_id == Uuid::nil() {
-            return Err(crate::custom_errors::app::AppError::ValidationError(
+            return Err(AppError::ValidationError(
                 "Group ID cannot be empty".to_string(),
             ));
         }
         
         Ok(())
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GetDuesReq{
+    pub group_id: Uuid,
+    pub simplify: bool,
+}
+
+impl GetDuesReq{
+    pub fn check(&self) -> Result<(), AppError> {
+        if self.group_id == Uuid::nil() {
+            return Err(AppError::ValidationError(
+                "Group ID cannot be empty".to_string(),
+            ));
+        }     
+        Ok(())
+    }
+}
+
+
+#[derive(Serialize)]
+pub struct SimplifiedDuesResponse {
+    pub dues: Vec<UserDue>,
+}
+
+#[derive(Serialize)]
+pub struct UserDue {
+    pub user_id: Uuid,
+    pub amount: Decimal,
+}
+
+#[derive(Serialize)]
+pub struct DetailedDuesResponse {
+    pub dues: Vec<DetailedDue>,
+}
+
+#[derive(Serialize)]
+pub struct DetailedDue {
+    pub activity_id: Uuid,
+    pub description: String,
+    pub paid_by: Uuid,
+    pub amount: Decimal,
+    pub split_details: Vec<SplitDetail>,
+}
+
+#[derive(Serialize)]
+pub struct SplitDetail {
+    pub user_id: Uuid,
+    pub amount: Decimal,
 }
