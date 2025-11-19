@@ -1,0 +1,398 @@
+.fr-card {
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  z-index: 1;
+}
+
+.fr-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--teal), var(--sage));
+  z-index: 2;
+}
+
+.fr-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0) 50%
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.fr-card.settled::before {
+  background: linear-gradient(
+    to bottom,
+    var(--settled-color),
+    rgba(76, 175, 80, 0.7)
+  );
+}
+
+.fr-card.owes-you::before {
+  background: linear-gradient(
+    to bottom,
+    var(--owes-you-color),
+    rgba(33, 150, 243, 0.7)
+  );
+}
+
+.fr-card.you-owe::before {
+  background: linear-gradient(
+    to bottom,
+    var(--you-owe-color),
+    rgba(255, 152, 0, 0.7)
+  );
+}
+
+.fr-card-content {
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  position: relative;
+  z-index: 3;
+}
+
+.fr-card-avatar {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.fr-card-avatar::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.8),
+    0 0 0 6px rgba(105, 162, 151, 0.2);
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s ease;
+}
+
+.fr-card:hover .fr-card-avatar::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.fr-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fr-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fr-email {
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.85rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fr-balance-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fr-balance-indicator.settled {
+  background-color: var(--settled-bg);
+  color: var(--settled-color);
+}
+
+.fr-balance-indicator.owes-you {
+  background-color: var(--owes-you-bg);
+  color: var(--owes-you-color);
+}
+
+.fr-balance-indicator.you-owe {
+  background-color: var(--you-owe-bg);
+  color: var(--you-owe-color);
+}
+
+.fr-last-activity {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-style: italic;
+}
+
+.fr-actions {
+  display: flex;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+  z-index: 3;
+  background-color: rgba(250, 250, 250, 0.7);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.fr-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.85rem 0;
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.fr-action-btn::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 80%;
+  height: 2px;
+  background-color: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.fr-action-btn:hover::after {
+  transform: translateX(-50%) scaleX(1);
+}
+
+.fr-action-btn:last-child {
+  border-right: none;
+}
+
+.fr-action-btn.add-expense:hover {
+  color: var(--teal-dark);
+}
+
+.fr-action-btn.settle-up:hover {
+  color: var(--settled-color);
+}
+
+.fr-action-btn.remind:hover {
+  color: var(--you-owe-color);
+}
+
+@media (max-width: 640px) {
+  .fr-actions {
+    flex-direction: column;
+  }
+
+  .fr-action-btn {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.7rem 0;
+  }
+
+  .fr-action-btn:last-child {
+    border-bottom: none;
+  }
+
+  .fr-action-btn::after {
+    width: 50%;
+  }
+}
+.fr-card {
+  background-color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.fr-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-5px);
+}
+
+.fr-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 100%;
+  background-color: var(--teal);
+}
+
+.fr-card.settled::before {
+  background-color: var(--settled-color);
+}
+
+.fr-card.owes-you::before {
+  background-color: var(--owes-you-color);
+}
+
+.fr-card.you-owe::before {
+  background-color: var(--you-owe-color);
+}
+
+.fr-card-content {
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fr-card-avatar {
+  flex-shrink: 0;
+}
+
+.fr-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.fr-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 0.25rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fr-email {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 0.75rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.fr-balance-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.fr-balance-indicator.settled {
+  background-color: var(--settled-bg);
+  color: var(--settled-color);
+}
+
+.fr-balance-indicator.owes-you {
+  background-color: var(--owes-you-bg);
+  color: var(--owes-you-color);
+}
+
+.fr-balance-indicator.you-owe {
+  background-color: var(--you-owe-bg);
+  color: var(--you-owe-color);
+}
+
+.fr-last-activity {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.fr-actions {
+  display: flex;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.fr-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.75rem 0;
+  background: none;
+  border: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.01);
+}
+
+.fr-action-btn:last-child {
+  border-right: none;
+}
+
+.fr-action-btn:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.fr-action-btn.add-expense:hover {
+  color: var(--teal-dark);
+}
+
+.fr-action-btn.settle-up:hover {
+  color: var(--settled-color);
+}
+
+.fr-action-btn.remind:hover {
+  color: var(--you-owe-color);
+}
+
+@media (max-width: 640px) {
+  .fr-actions {
+    flex-direction: column;
+  }
+
+  .fr-action-btn {
+    border-right: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.6rem 0;
+  }
+
+  .fr-action-btn:last-child {
+    border-bottom: none;
+  }
+}

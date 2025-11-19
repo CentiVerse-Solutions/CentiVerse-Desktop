@@ -1,0 +1,116 @@
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 0 1rem;
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+}
+
+.search-bar.animated {
+  animation: searchAppear 0.5s ease forwards;
+}
+
+@keyframes searchAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.search-bar.focused {
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 3px rgba(183, 110, 121, 0.15);
+}
+
+.search-icon {
+  display: flex;
+  color: #9e9e9e;
+  transition: color 0.3s ease;
+}
+
+.search-bar.focused .search-icon {
+  color: var(--rose-gold);
+}
+
+.search-input {
+  flex: 1;
+  height: 42px;
+  padding: 0 0.75rem;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #9e9e9e;
+  transition: color 0.3s ease;
+}
+
+.search-bar.focused .search-input::placeholder {
+  color: #bdbdbd;
+}
+
+.clear-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #9e9e9e;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.clear-button:hover {
+  color: var(--rose-gold);
+  background-color: rgba(183, 110, 121, 0.1);
+}
+
+/* Animation for the clear button */
+.clear-button {
+  animation: fadeIn 0.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Focus state enhancement for accessibility */
+.search-bar:focus-within {
+  border-color: var(--rose-gold);
+  box-shadow: 0 0 0 3px rgba(183, 110, 121, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .search-bar {
+    padding: 0 0.75rem;
+  }
+
+  .search-input {
+    height: 38px;
+    font-size: 0.9rem;
+  }
+}
