@@ -16,7 +16,10 @@ export const money = (minor: number, currency: CurrencyCode): Money => {
   if (!Number.isSafeInteger(minor)) {
     throw new MoneyError(`non-integer minor units: ${minor}`);
   }
-  return { minor, currency };
+  // Normalise negative zero. JS distinguishes -0 from 0 under Object.is and in
+  // strict equality of test assertions; letting it into a Money makes otherwise
+  // identical amounts compare unequal.
+  return { minor: minor === 0 ? 0 : minor, currency };
 };
 
 export const assertSameCurrency = (a: Money, b: Money): void => {

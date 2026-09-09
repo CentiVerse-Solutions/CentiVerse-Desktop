@@ -18,6 +18,11 @@ describe('money()', () => {
     expect(money(-500, 'INR').minor).toBe(-500);
   });
 
+  it('normalises negative zero, so equal amounts always compare equal', () => {
+    expect(Object.is(money(-0, 'INR').minor, 0)).toBe(true);
+    expect(money(-0, 'INR')).toEqual(money(0, 'INR'));
+  });
+
   it.each([1.5, NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1])(
     'rejects non-safe-integer minor units: %s',
     (bad) => {
