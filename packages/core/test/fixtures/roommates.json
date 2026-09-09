@@ -1,0 +1,42 @@
+{
+  "name": "Roommates — recurring rent and utilities, fully settled at the end",
+  "currency": "INR",
+  "members": ["priya", "rahul"],
+  "expenses": [
+    {
+      "id": "r1",
+      "description": "Rent — priya paid, split evenly",
+      "total": 3000000,
+      "payers": [{ "userId": "priya", "amount": 3000000 }],
+      "shares": [
+        { "userId": "priya", "amount": 1500000 },
+        { "userId": "rahul", "amount": 1500000 }
+      ]
+    },
+    {
+      "id": "r2",
+      "description": "Electricity — rahul paid, split evenly",
+      "total": 240000,
+      "payers": [{ "userId": "rahul", "amount": 240000 }],
+      "shares": [
+        { "userId": "priya", "amount": 120000 },
+        { "userId": "rahul", "amount": 120000 }
+      ]
+    }
+  ],
+  "settlements": [
+    {
+      "id": "rs1",
+      "description": "rahul clears the balance exactly",
+      "from": "rahul",
+      "to": "priya",
+      "amount": 1380000
+    }
+  ],
+  "expectedNet": {
+    "priya": 0,
+    "rahul": 0
+  },
+  "expectedPairwise": {},
+  "expectedTransferCount": 0
+}

@@ -1,0 +1,110 @@
+{
+  "name": "Thailand Trip — four people, mixed split types, one settlement",
+  "currency": "INR",
+  "members": [
+    "alice",
+    "bob",
+    "carol",
+    "dev"
+  ],
+  "expenses": [
+    {
+      "id": "e1",
+      "description": "Hotel, 3 nights — alice paid, split evenly four ways",
+      "total": 4800000,
+      "payers": [
+        {
+          "userId": "alice",
+          "amount": 4800000
+        }
+      ],
+      "shares": [
+        {
+          "userId": "alice",
+          "amount": 1200000
+        },
+        {
+          "userId": "bob",
+          "amount": 1200000
+        },
+        {
+          "userId": "carol",
+          "amount": 1200000
+        },
+        {
+          "userId": "dev",
+          "amount": 1200000
+        }
+      ]
+    },
+    {
+      "id": "e2",
+      "description": "Dinner ₹1000 split three ways — the classic remainder case",
+      "total": 100000,
+      "payers": [
+        {
+          "userId": "bob",
+          "amount": 100000
+        }
+      ],
+      "shares": [
+        {
+          "userId": "alice",
+          "amount": 33334
+        },
+        {
+          "userId": "bob",
+          "amount": 33333
+        },
+        {
+          "userId": "carol",
+          "amount": 33333
+        }
+      ]
+    },
+    {
+      "id": "e3",
+      "description": "Scooter hire — carol and dev paid together, only dev rode",
+      "total": 150000,
+      "payers": [
+        {
+          "userId": "carol",
+          "amount": 100000
+        },
+        {
+          "userId": "dev",
+          "amount": 50000
+        }
+      ],
+      "shares": [
+        {
+          "userId": "dev",
+          "amount": 150000
+        }
+      ]
+    }
+  ],
+  "settlements": [
+    {
+      "id": "s1",
+      "description": "bob squares up part of the hotel with alice",
+      "from": "bob",
+      "to": "alice",
+      "amount": 1000000
+    }
+  ],
+  "expectedNet": {
+    "alice": 2566666,
+    "bob": -133333,
+    "carol": -1133333,
+    "dev": -1300000
+  },
+  "expectedPairwise": {
+    "bob:alice": 166666,
+    "carol:alice": 1200000,
+    "dev:alice": 1200000,
+    "carol:bob": 33333,
+    "dev:carol": 100000
+  },
+  "expectedTransferCount": 3
+}
