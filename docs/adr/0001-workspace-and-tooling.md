@@ -21,7 +21,8 @@ Records the §12 decisions taken before Phase 1 so they are not re-litigated.
 
 ## Still open
 
-Decisions #1, #2, #3, #6, #9 (Phase 5), #4 (Phase 2) and #10 (Phase 6) are untouched.
+Decisions #1, #2, #3, #6, #9 (Phase 5) and #10 (Phase 6) are untouched.
+#4 is decided in [ADR 0002](0002-currency-scope.md).
 
 ## Deferred
 
