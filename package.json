@@ -9,8 +9,9 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "build": "pnpm --filter web build",
-    "test": "pnpm --filter web test",
-    "typecheck": "pnpm --filter web typecheck",
+    "test": "pnpm -r test",
+    "test:cov": "pnpm --filter @centiverse/core test:cov",
+    "typecheck": "pnpm -r typecheck",
     "lint": "pnpm --filter web lint",
     "tauri:dev": "pnpm --filter desktop dev",
     "tauri:build": "pnpm --filter desktop build"
