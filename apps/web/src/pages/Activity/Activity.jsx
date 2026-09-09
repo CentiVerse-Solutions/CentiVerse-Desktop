@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -19,7 +19,9 @@ import {
 import SearchBar from '../../components/common/SearchBar/SearchBar';
 import { Button } from '../../components/common/Button/Button';
 import { Avatar } from '../../components/common/Avatar/Avatar';
-import { mockExpenses, mockGroups, mockFriends } from '../../utils/mockData';
+import { useRecentExpenses, useGroups } from '../../data/hooks';
+import { toLegacyExpenses } from '../../data/legacy';
+import { LoadingState, ErrorState } from '../../shared/ui/AsyncBoundary';
 import './Activity.css';
 import { formatAmount } from '../../shared/money/format';
 
@@ -42,13 +44,19 @@ const Activity = () => {
     // Current user ID (in a real app this would come from auth context)
     const currentUserId = 1; // Assuming user with ID 1 is "You"
 
+    // §5.2: expenses and groups come from the seam.
+    const expensesQuery = useRecentExpenses(500);
+    const groupsQuery = useGroups();
+    const allExpenses = useMemo(() => toLegacyExpenses(expensesQuery.data ?? []), [expensesQuery.data]);
+    const allGroups = groupsQuery.data ?? [];
+
     // Get all expenses with group info, settlement status, and relevant to the current user
     useEffect(() => {
         // Process expenses to add settlement information
         // In a real app, this would come from your backend
-        const enhancedExpenses = mockExpenses.map(expense => {
+        const enhancedExpenses = allExpenses.map(expense => {
             // Find the group this expense belongs to
-            const group = expense.groupId ? mockGroups.find(g => g.id === expense.groupId) : null;
+            const group = expense.groupId ? allGroups.find(g => g.id === expense.groupId) : null;
 
             // Calculate settlement info
             const userIsPayer = expense.paidBy.id === currentUserId;
@@ -114,7 +122,7 @@ const Activity = () => {
 
         setActivities(sortedActivities);
         setFilteredActivities(sortedActivities);
-    }, []);
+    }, [allExpenses, allGroups, currentUserId]);
 
     // Update filtered activities when filters change
     useEffect(() => {
@@ -243,7 +251,7 @@ const Activity = () => {
     // Get unique categories from all expenses
     const getUniqueCategories = () => {
         const categories = {};
-        mockExpenses.forEach(expense => {
+        allExpenses.forEach(expense => {
             if (expense.category && !categories[expense.category.id]) {
                 categories[expense.category.id] = expense.category;
             }
@@ -271,6 +279,18 @@ const Activity = () => {
             transition: { type: 'spring', stiffness: 100, damping: 15 }
         }
     };
+
+    // Phase 3 exit criterion: real loading and error states on every screen.
+    if (expensesQuery.isPending) return <LoadingState label="Loading activity…" />;
+    if (expensesQuery.isError) {
+        return (
+            <ErrorState
+                error={expensesQuery.error}
+                label="Could not load activity"
+                onRetry={() => expensesQuery.refetch()}
+            />
+        );
+    }
 
     return (
         <motion.div
@@ -400,7 +420,7 @@ const Activity = () => {
                             >
                                 All Groups
                             </button>
-                            {mockGroups.map(group => (
+                            {allGroups.map(group => (
                                 <button
                                     key={group.id}
                                     className={`act-filter-option ${filterGroup === group.id.toString() ? 'active' : ''}`}

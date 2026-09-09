@@ -17,7 +17,9 @@ import {
 import { Button } from '../../components/common/Button/Button';
 import SearchBar from '../../components/common/SearchBar/SearchBar';
 import { Avatar } from '../../components/common/Avatar/Avatar';
-import { mockFriends, mockGroups, mockExpenses } from '../../utils/mockData';
+import { useViewerBalances, useRecentExpenses, useFriends, useGroups } from '../../data/hooks';
+import { toLegacyExpenses, toLegacyFriends, toMajor } from '../../data/legacy';
+import { LoadingState, ErrorState } from '../../shared/ui/AsyncBoundary';
 import './Dashboard.css';
 import { formatAmount } from '../../shared/money/format';
 
@@ -31,46 +33,49 @@ const Dashboard = () => {
     const [recentActivities, setRecentActivities] = useState([]);
     const [topFriends, setTopFriends] = useState([]);
 
-    // Calculate balances and recent activities
+    // §5.2: every number here is derived from the ledger by @centiverse/core.
+    // The old code summed mockFriends[].balance -- floats someone typed by hand
+    // that never reconciled with mockExpenses.
+    const balancesQuery = useViewerBalances();
+    const expensesQuery = useRecentExpenses(5);
+    const friendsQuery = useFriends();
+    const groupsQuery = useGroups();
+
+    const isPending =
+        balancesQuery.isPending || expensesQuery.isPending || friendsQuery.isPending;
+    const loadError =
+        balancesQuery.error ?? expensesQuery.error ?? friendsQuery.error ?? null;
+
     useEffect(() => {
-        // Calculate total balances
-        const youAreOwed = mockFriends
-            .filter(friend => friend.balance > 0)
-            .reduce((sum, friend) => sum + friend.balance, 0);
-
-        const youOwe = mockFriends
-            .filter(friend => friend.balance < 0)
-            .reduce((sum, friend) => sum + Math.abs(friend.balance), 0);
-
+        const b = balancesQuery.data;
+        if (!b) return;
         setBalanceSummary({
-            youAreOwed,
-            youOwe,
-            netBalance: youAreOwed - youOwe,
+            youAreOwed: toMajor(b.youAreOwed.minor),
+            youOwe: toMajor(b.youOwe.minor),
+            netBalance: toMajor(b.net.minor),
         });
+    }, [balancesQuery.data]);
 
-        // Get recent activities (expenses)
-        const activities = [...mockExpenses]
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .slice(0, 5)
-            .map(expense => {
-                // Find the group this expense belongs to
-                const group = expense.groupId ? mockGroups.find(g => g.id === expense.groupId) : null;
-                return {
-                    ...expense,
-                    group,
-                    type: 'expense',
-                };
-            });
+    useEffect(() => {
+        if (!expensesQuery.data) return;
+        const groups = groupsQuery.data ?? [];
+        setRecentActivities(
+            toLegacyExpenses(expensesQuery.data).map((expense) => ({
+                ...expense,
+                group: expense.groupId ? groups.find((g) => g.id === expense.groupId) ?? null : null,
+                type: 'expense',
+            })),
+        );
+    }, [expensesQuery.data, groupsQuery.data]);
 
-        setRecentActivities(activities);
-
-        // Get top friends (those with highest absolute balances)
-        const sortedFriends = [...mockFriends]
-            .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
-            .slice(0, 4);
-
-        setTopFriends(sortedFriends);
-    }, []);
+    useEffect(() => {
+        if (!friendsQuery.data) return;
+        setTopFriends(
+            [...toLegacyFriends(friendsQuery.data)]
+                .sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))
+                .slice(0, 4),
+        );
+    }, [friendsQuery.data]);
 
     // Format currency
     // §4.1: currency comes from the data, never a hardcoded symbol.
@@ -118,6 +123,18 @@ const Dashboard = () => {
             transition: { type: 'spring', stiffness: 100, damping: 15 }
         }
     };
+
+    // Phase 3 exit criterion: real loading and error states on every screen.
+    if (isPending) return <LoadingState label="Loading your dashboard…" />;
+    if (loadError) {
+        return (
+            <ErrorState
+                error={loadError}
+                label="Could not load your dashboard"
+                onRetry={() => { balancesQuery.refetch(); expensesQuery.refetch(); friendsQuery.refetch(); }}
+            />
+        );
+    }
 
     return (
         <motion.div
@@ -241,7 +258,7 @@ const Dashboard = () => {
                         </div>
 
                         <div className="groups-grid">
-                            {mockGroups.slice(0, 4).map((group) => (
+                            {(groupsQuery.data ?? []).slice(0, 4).map((group) => (
                                 <Link to={`/groups/${group.id}`} key={group.id} className="group-card">
                                     <div className="group-avatar">
                                         <img src={group.avatar} alt={group.name} />

@@ -3,10 +3,10 @@ import { useLocation, Outlet } from 'react-router-dom';
 import SideNavbar from '../SideNavbar/SideNavbar';
 import './MainLayout.css';
 
-// Import mock data for testing (replace with your actual data source)
-import { mockGroups } from '../../../utils/mockData';
+import { useGroups } from '../../../data/hooks';
 
 const MainLayout = () => {
+    const { data: groups = [] } = useGroups();
     const [isNavOpen, setIsNavOpen] = useState(window.innerWidth >= 992);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
     const location = useLocation();
@@ -58,7 +58,7 @@ const MainLayout = () => {
             <SideNavbar
                 isOpen={isNavOpen}
                 toggleSideNav={toggleSideNav}
-                groups={mockGroups}
+                groups={groups}
             />
 
             <main className={`main-content ${isNavOpen && !isMobile ? 'with-sidebar' : ''}`}>

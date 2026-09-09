@@ -6,7 +6,9 @@ import SearchBar from '../../components/common/SearchBar/SearchBar';
 import {Button} from '../../components/common/Button/Button';
 import AddFriendModal from '../../components/friends/AddFriendModal/AddFriendModal';
 import FriendDetailsSidebar from '../../components/friends/FriendDetailsSidebar/FriendDetailsSidebar';
-import { mockFriends } from '../../utils/mockData';
+import { useFriends } from '../../data/hooks';
+import { toLegacyFriends } from '../../data/legacy';
+import AsyncBoundary from '../../shared/ui/AsyncBoundary';
 import './Friends.css';
 
 const Friends = () => {
@@ -18,13 +20,16 @@ const Friends = () => {
     const [selectedFriend, setSelectedFriend] = useState(null);
     const [isDetailsSidebarOpen, setIsDetailsSidebarOpen] = useState(false);
 
-    // Fetch friends data
+    // Friends and their balances come from the seam; balances are derived by
+    // @centiverse/core, not the float that used to sit in the mock data.
+    const friendsQuery = useFriends();
+
     useEffect(() => {
-        // In a real app, this would be a call to your API
-        // For now, using mock data
-        setFriends(mockFriends);
-        setFilteredFriends(mockFriends);
-    }, []);
+        if (!friendsQuery.data) return;
+        const list = toLegacyFriends(friendsQuery.data);
+        setFriends(list);
+        setFilteredFriends(list);
+    }, [friendsQuery.data]);
 
     // Filter friends based on search query and filter option
     useEffect(() => {

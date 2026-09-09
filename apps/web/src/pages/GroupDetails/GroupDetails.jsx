@@ -38,7 +38,8 @@ import GroupExport from '../../components/groups/GroupExport/GroupExport';
 import './GroupDetails.css';
 
 // Import mock data for testing
-import { mockGroups, mockExpenses, mockFriends } from '../../utils/mockData';
+import { useGroup, useGroupExpenses, useGroupBalances } from '../../data/hooks';
+import { toLegacyExpenses, toLegacyBalances } from '../../data/legacy';
 import { VIEWER_ID } from '../../shared/people/viewer';
 
 // Utility functions for financial calculations - moved from component for clarity
@@ -99,62 +100,41 @@ const GroupDetails = () => {
     const [splitValues, setSplitValues] = useState({});
     const [memberToRemove, setMemberToRemove] = useState(null);
 
-    // Memoized fetch function to avoid recreation on each render
-    const fetchGroupData = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
+    // §5.2 -- data comes from the seam. Loading and error are real query states.
+    const numericGroupId = Number.parseInt(groupId, 10);
+    const groupQuery = useGroup(numericGroupId);
+    const expensesQuery = useGroupExpenses(numericGroupId);
+    const balancesQuery = useGroupBalances(numericGroupId);
 
-        try {
-            // Simulate API call with delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // In a real app, these would be API calls
-            // const response = await fetch(`/api/groups/${groupId}`);
-            // if (!response.ok) throw new Error('Failed to fetch group data');
-            // const groupData = await response.json();
-
-            // For now, use mock data
-            const selectedGroup = mockGroups.find(g => g.id === parseInt(groupId));
-
-            if (!selectedGroup) {
-                // Handle 404 - Group not found
-                setError('Group not found');
-                navigate('/groups');
-                return;
-            }
-
-            const groupExpenses = mockExpenses.filter(e => e.groupId === parseInt(groupId));
-
-            setGroup(selectedGroup);
-            setExpenses(groupExpenses);
-
-            // Initialize participants with all group members checked
-            if (selectedGroup) {
-                const initialParticipants = selectedGroup.members.map(member => member.id);
-                setExpenseForm(prev => ({
-                    ...prev,
-                    participants: initialParticipants
-                }));
-
-                // Initialize empty split values for all members
-                const initialSplitValues = {};
-                selectedGroup.members.forEach(member => {
-                    initialSplitValues[member.id] = '';
-                });
-                setSplitValues(initialSplitValues);
-            }
-        } catch (error) {
-            console.error("Error fetching group data:", error);
-            setError('Failed to load group data. Please try again later.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [groupId, navigate]);
-
-    // Load data on mount or when groupId changes
     useEffect(() => {
-        fetchGroupData();
-    }, [fetchGroupData]);
+        setIsLoading(groupQuery.isPending || expensesQuery.isPending);
+    }, [groupQuery.isPending, expensesQuery.isPending]);
+
+    useEffect(() => {
+        const failure = groupQuery.error ?? expensesQuery.error ?? null;
+        setError(failure ? failure.message : null);
+    }, [groupQuery.error, expensesQuery.error]);
+
+    useEffect(() => {
+        const selectedGroup = groupQuery.data;
+        if (!selectedGroup) return;
+
+        setGroup(selectedGroup);
+        setExpenseForm(prev => ({
+            ...prev,
+            participants: selectedGroup.members.map(member => member.id),
+        }));
+
+        const initialSplitValues = {};
+        selectedGroup.members.forEach(member => {
+            initialSplitValues[member.id] = '';
+        });
+        setSplitValues(initialSplitValues);
+    }, [groupQuery.data]);
+
+    useEffect(() => {
+        if (expensesQuery.data) setExpenses(toLegacyExpenses(expensesQuery.data));
+    }, [expensesQuery.data]);
 
     // Handle sidebar toggle
     const toggleSidebar = () => {
@@ -655,54 +635,12 @@ const GroupDetails = () => {
         setIsConfirmDialogOpen(true);
     };
 
-    // Calculate balances based on expenses
-    const balances = useMemo(() => {
-        if (!group || !expenses.length) return [];
-
-        // Create a balance object for each member
-        const balances = {};
-        group.members.forEach(member => {
-            balances[member.id] = {
-                id: member.id,
-                name: member.name,
-                avatar: member.avatar,
-                balance: 0,
-            };
-        });
-
-        // Process each expense to calculate balances
-        expenses.forEach(expense => {
-            const paidBy = expense.paidBy.id;
-            const totalAmount = expense.amount;
-
-            // If we have split values, use them
-            if (expense.splitValues && Object.keys(expense.splitValues).length > 0) {
-                // The person who paid gets credited the full amount
-                balances[paidBy].balance += totalAmount;
-
-                // Each participant gets debited their share
-                Object.entries(expense.splitValues).forEach(([participantId, amount]) => {
-                    if (balances[participantId]) {
-                        balances[participantId].balance -= parseFloat(amount);
-                    }
-                });
-            } else {
-                // Fallback to equal split
-                const splitCount = expense.participants.length;
-                const amountPerPerson = totalAmount / splitCount;
-
-                // Add to the person who paid
-                balances[paidBy].balance += totalAmount;
-
-                // Subtract from each participant
-                expense.participants.forEach(participant => {
-                    balances[participant.id].balance -= amountPerPerson;
-                });
-            }
-        });
-
-        return Object.values(balances);
-    }, [group, expenses]);
+    // §4.4 / non-negotiable 2: balances are DERIVED by @centiverse/core.
+    // This used to compute `totalAmount / splitCount` in floats right here.
+    const balances = useMemo(
+        () => toLegacyBalances(balancesQuery.data),
+        [balancesQuery.data],
+    );
 
     // Format currency with proper locale support
     const formatCurrency = (amount) => {
@@ -838,7 +776,7 @@ const GroupDetails = () => {
                 <p>{error}</p>
                 <motion.button
                     className="action-btn primary"
-                    onClick={() => fetchGroupData()}
+                    onClick={() => { groupQuery.refetch(); expensesQuery.refetch(); balancesQuery.refetch(); }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                 >

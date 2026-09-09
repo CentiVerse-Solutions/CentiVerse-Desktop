@@ -3,56 +3,50 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Users, Star, PlusCircle } from 'lucide-react';
 import GroupList from '../../components/groups/GroupList/GroupList';
 import NewGroupModal from '../../components/groups/NewGroupModal/NewGroupModal';
-import { mockGroups, mockExpenses, mockFriends } from '../../utils/mockData';
+import { useGroups, useFriends, useRecentExpenses, useCreateGroup } from '../../data/hooks';
+import { toLegacyExpenses, toLegacyFriends } from '../../data/legacy';
 import './Groups.css';
 
 const Groups = () => {
     const [groups, setGroups] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [friends, setFriends] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // Fetch data on mount - replace with actual API calls later
+    // Data comes from the seam (§5.2). Loading, error and empty states below are
+    // real query states rather than a simulated setTimeout.
+    const groupsQuery = useGroups();
+    const expensesQuery = useRecentExpenses(500);
+    const friendsQuery = useFriends();
+    const createGroup = useCreateGroup();
+
+    const isLoading =
+        groupsQuery.isPending || expensesQuery.isPending || friendsQuery.isPending;
+    const error =
+        groupsQuery.error ?? expensesQuery.error ?? friendsQuery.error ?? null;
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Simulate API delay
-                await new Promise(resolve => setTimeout(resolve, 800));
+        if (groupsQuery.data) setGroups(groupsQuery.data);
+    }, [groupsQuery.data]);
 
-                // Use mock data for now
-                setGroups(mockGroups);
-                setExpenses(mockExpenses);
-                setFriends(mockFriends);
-                setIsLoading(false);
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                setError('Failed to load data. Please try again later.');
-                setIsLoading(false);
-            }
-        };
+    useEffect(() => {
+        if (expensesQuery.data) setExpenses(toLegacyExpenses(expensesQuery.data));
+    }, [expensesQuery.data]);
 
-        fetchData();
-    }, []);
+    useEffect(() => {
+        if (friendsQuery.data) setFriends(toLegacyFriends(friendsQuery.data));
+    }, [friendsQuery.data]);
 
     // Handle creating a new group
+    // Creation goes through the port, which assigns the id and adds the viewer
+    // as a member. §5.4: no component invents a user named "You".
     const handleCreateGroup = (groupData) => {
-        // Generate an ID and add to groups
-        const newGroup = {
-            ...groupData,
-            id: Math.max(...groups.map(g => g.id), 0) + 1,
-            createdAt: new Date().toISOString(),
-            members: [...groupData.members, {
-                id: 1,
-                name: "You",
-                email: "you@example.com",
-                avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-            }]
-        };
-
-        // Update state with new group
-        setGroups(prevGroups => [newGroup, ...prevGroups]);
+        createGroup.mutate({
+            name: groupData.name,
+            currency: groupData.currency ?? 'INR',
+            members: groupData.members ?? [],
+            ...(groupData.avatar ? { avatar: groupData.avatar } : {}),
+        });
     };
 
     // Stats summary based on groups data

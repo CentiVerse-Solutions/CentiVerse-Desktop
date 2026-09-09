@@ -10,7 +10,7 @@ import { Badge } from '../../components/common/Badge/Badge';
 import  SplitText  from '../../components/common/SplitText/SplitText';
 
 // Import mock currencies for dropdown
-import { mockCurrencies } from '../../utils/mockData';
+import { SUPPORTED_CURRENCIES as mockCurrencies } from '../../shared/currencies';
 
 // Use a default import approach that's safer
 const defaultAvatar = 'https://via.placeholder.com/150';
