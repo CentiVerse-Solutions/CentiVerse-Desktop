@@ -47,3 +47,7 @@ test.js
 
 # Coverage output
 coverage/
+
+# Playwright
+test-results/
+playwright-report/

@@ -38,7 +38,7 @@ import GroupExport from '../../components/groups/GroupExport/GroupExport';
 import './GroupDetails.css';
 
 // Import mock data for testing
-import { useGroup, useGroupExpenses, useGroupBalances } from '../../data/hooks';
+import { useGroup, useGroupExpenses, useGroupBalances, useCreateExpense, useCreateSettlement } from '../../data/hooks';
 import { toLegacyExpenses, toLegacyBalances } from '../../data/legacy';
 import { VIEWER_ID } from '../../shared/people/viewer';
 
@@ -105,6 +105,8 @@ const GroupDetails = () => {
     const groupQuery = useGroup(numericGroupId);
     const expensesQuery = useGroupExpenses(numericGroupId);
     const balancesQuery = useGroupBalances(numericGroupId);
+    const createExpense = useCreateExpense();
+    const createSettlement = useCreateSettlement();
 
     useEffect(() => {
         setIsLoading(groupQuery.isPending || expensesQuery.isPending);
@@ -434,50 +436,67 @@ const GroupDetails = () => {
             return;
         }
 
-        // Create new expense object
-        const newExpense = {
-            id: Date.now(), // Use timestamp as unique ID
-            groupId: parseInt(groupId),
-            description,
-            amount: parseFloat(amount),
-            date,
-            paidBy: payer,
-            category: {
-                id: category,
-                name: getCategoryName(category),
-                icon: getCategoryIcon(category)
+        // §5.2 write path: the port calls computeShares, so the split is produced
+        // by @centiverse/core and the balance queries invalidate on success.
+        // Non-negotiable 2: this component no longer computes a share.
+        const participantIds = group.members
+            .filter(member => participants.includes(member.id))
+            .map(member => member.id);
+
+        const toMinorUnits = (value) => Math.round(parseFloat(value) * 100);
+
+        const strategy = (() => {
+            if (expenseForm.splitType === 'unequal' && splitResults) {
+                return {
+                    kind: 'EXACT',
+                    shares: Object.entries(splitResults).map(([userId, value]) => ({
+                        userId: parseInt(userId, 10),
+                        minor: toMinorUnits(value),
+                    })),
+                };
+            }
+            if (expenseForm.splitType === 'percent') {
+                return {
+                    kind: 'PERCENT',
+                    shares: participantIds.map(userId => ({
+                        userId,
+                        bps: Math.round(parseFloat(splitValues[userId] || 0) * 100),
+                    })),
+                };
+            }
+            if (expenseForm.splitType === 'shares') {
+                return {
+                    kind: 'SHARES',
+                    shares: participantIds.map(userId => ({
+                        userId,
+                        weight: parseInt(splitValues[userId] || 1, 10),
+                    })),
+                };
+            }
+            return { kind: 'EQUAL' };
+        })();
+
+        createExpense.mutate(
+            {
+                groupId: parseInt(groupId, 10),
+                description,
+                totalMinor: toMinorUnits(amount),
+                currency: group.currency || 'INR',
+                date,
+                paidByUserId: payer.id,
+                participantIds,
+                strategy,
+                ...(notes ? { notes } : {}),
             },
-            participants: group.members.filter(member => participants.includes(member.id)),
-            splitValues: splitResults || {}, // Fallback to empty object if null
-            notes: notes || ""
-        };
-
-        // In a real app, we would call an API here
-        // const response = await fetch('/api/expenses', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(newExpense),
-        // });
-
-        // if (!response.ok) {
-        //   setFormErrors({ general: 'Failed to save expense. Please try again.' });
-        //   return;
-        // }
-
-        // const savedExpense = await response.json();
-        // setExpenses([savedExpense, ...expenses]);
-
-        // For now, just use the mocked data
-        setExpenses([newExpense, ...expenses]);
+            {
+                onError: (mutationError) =>
+                    setFormErrors(prev => ({ ...prev, general: mutationError.message })),
+            },
+        );
 
         // Close modal and reset form
         setIsQuickAddOpen(false);
         resetExpenseForm();
-
-        // Show success notification (in a real app)
-        console.log('New expense added:', newExpense);
     };
 
     // Reset form state
@@ -575,25 +594,16 @@ const GroupDetails = () => {
             isSettlement: true
         };
 
-        // In a real app, this would be an API call
-        // const response = await fetch('/api/settlements', {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(settlement),
-        // });
-
-        // if (!response.ok) {
-        //   console.error('Failed to save settlement');
-        //   return;
-        // }
-
-        // const savedSettlement = await response.json();
-        // setExpenses([savedSettlement, ...expenses]);
-
-        // For now, just use the mocked data
-        setExpenses([settlement, ...expenses]);
+        // §4.4: a settlement is its own ledger entry between two real parties,
+        // never a synthetic expense row.
+        createSettlement.mutate({
+            groupId: parseInt(groupId, 10),
+            from: balance.balance < 0 ? member.id : VIEWER_ID,
+            to: balance.balance < 0 ? VIEWER_ID : member.id,
+            amountMinor: Math.round(Math.abs(balance.balance) * 100),
+            currency: group.currency || 'INR',
+            method: 'OTHER',
+        });
 
         // Show success notification (in a real app)
         console.log('Settlement added:', settlement);

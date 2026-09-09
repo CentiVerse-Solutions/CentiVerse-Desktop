@@ -58,7 +58,11 @@ export default [
     },
   },
   { files: ['**/*.test.{js,jsx}', 'src/setupTests.js'], languageOptions: { globals: { ...globals.node, ...globals.vitest } } },
-  { files: ['vite.config.js', 'eslint.config.js'], languageOptions: { globals: globals.node } },
+  // Node context: build config and the Playwright suite.
+  {
+    files: ['vite.config.js', 'eslint.config.js', 'playwright.config.js', 'e2e/**/*.js'],
+    languageOptions: { globals: { ...globals.node } },
+  },
   // existing MUI usages stay legal until their feature is migrated
   { files: MUI_ALLOWLIST, rules: { 'no-restricted-imports': 'off' } },
 ];
