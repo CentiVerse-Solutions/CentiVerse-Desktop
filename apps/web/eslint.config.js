@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
+import tseslint from 'typescript-eslint';
 
 /** Files that already import MUI. The ban below stops NEW ones appearing;
  *  these migrate off feature-by-feature and the packages go in Phase 7 (ADR 0001, §12 #8). */
@@ -15,6 +16,8 @@ const MUI_ALLOWLIST = [
 export default [
   { ignores: ['dist/**', 'build/**', 'node_modules/**'] },
   js.configs.recommended,
+  // TypeScript files need the TS parser; without it `interface` is a syntax error.
+  ...tseslint.configs.recommended.map((c) => ({ ...c, files: ['**/*.{ts,tsx}'] })),
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -43,6 +46,15 @@ export default [
             'MUI is being removed (ARCHITECTURE.md 7.5, non-negotiable 10). Use the Radix/shadcn primitives in components/ui plus lucide-react icons.',
         }],
       }],
+    },
+  },
+  // TS-specific rule tuning, in the same block that registers the plugin.
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
   { files: ['**/*.test.{js,jsx}', 'src/setupTests.js'], languageOptions: { globals: { ...globals.node, ...globals.vitest } } },

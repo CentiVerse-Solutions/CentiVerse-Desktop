@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, DollarSign, Clock, MoreHorizontal, ArrowUpRight, ArrowDownLeft, CheckCircle, Calendar, Share2, Eye } from 'lucide-react';
 import './GroupCard.css';
+import { formatAmount } from '../../../shared/money/format';
 
 const GroupCard = ({ group, expenses = [], currentUserId }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -40,15 +41,8 @@ const GroupCard = ({ group, expenses = [], currentUserId }) => {
         .filter(expense => expense.groupId === group.id)
         .sort((a, b) => new Date(b.date) - new Date(a.date))[0];
 
-    // Format currency
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-        }).format(amount);
-    };
+    // §4.1: the group's own currency, not a hardcoded USD.
+    const formatCurrency = (amount) => formatAmount(amount, group?.currency ?? 'INR');
 
     // Format date
     const formatDate = (dateString) => {

@@ -21,6 +21,7 @@ import { Button } from '../../components/common/Button/Button';
 import { Avatar } from '../../components/common/Avatar/Avatar';
 import { mockExpenses, mockGroups, mockFriends } from '../../utils/mockData';
 import './Activity.css';
+import { formatAmount } from '../../shared/money/format';
 
 const Activity = () => {
     const [activities, setActivities] = useState([]);
@@ -178,9 +179,8 @@ const Activity = () => {
     };
 
     // Format currency
-    const formatCurrency = (amount) => {
-        return `$${amount.toFixed(2)}`;
-    };
+    // §4.1: currency comes from the data, never a hardcoded symbol.
+    const formatCurrency = (amount) => formatAmount(amount);
 
     // Format date
     const formatDate = (dateString) => {

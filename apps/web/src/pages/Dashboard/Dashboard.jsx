@@ -19,6 +19,7 @@ import SearchBar from '../../components/common/SearchBar/SearchBar';
 import { Avatar } from '../../components/common/Avatar/Avatar';
 import { mockFriends, mockGroups, mockExpenses } from '../../utils/mockData';
 import './Dashboard.css';
+import { formatAmount } from '../../shared/money/format';
 
 const Dashboard = () => {
     const [balanceSummary, setBalanceSummary] = useState({
@@ -72,9 +73,8 @@ const Dashboard = () => {
     }, []);
 
     // Format currency
-    const formatCurrency = (amount) => {
-        return `$${amount.toFixed(2)}`;
-    };
+    // §4.1: currency comes from the data, never a hardcoded symbol.
+    const formatCurrency = (amount) => formatAmount(amount);
 
     // Format date
     const formatDate = (dateString) => {
