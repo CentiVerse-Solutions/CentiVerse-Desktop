@@ -11,6 +11,7 @@
     "build": "pnpm --filter web build",
     "test": "pnpm --filter web test",
     "typecheck": "pnpm --filter web typecheck",
+    "lint": "pnpm --filter web lint",
     "tauri:dev": "pnpm --filter desktop dev",
     "tauri:build": "pnpm --filter desktop build"
   }
