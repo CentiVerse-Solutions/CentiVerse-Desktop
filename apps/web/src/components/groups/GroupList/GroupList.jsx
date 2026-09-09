@@ -543,6 +543,7 @@ const GroupList = ({ groups = [], expenses = [], friends = [], onCreateGroup, vi
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <NewGroupModal
+                                    isOpen
                                     onClose={closeCreateGroupModal}
                                     onCreateGroup={handleCreateGroup}
                                     friends={friends}

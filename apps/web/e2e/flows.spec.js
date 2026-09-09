@@ -37,10 +37,14 @@ test.describe('2. create a group', () => {
     await page.locator('.groups-page').getByRole('button', { name: /new group/i }).first().click();
     await expect(page.locator('input[name="name"]').first()).toBeVisible({ timeout: 5_000 });
 
-    const nameField = page.locator('input[name="name"], input#groupName, input[placeholder*="name" i]').first();
-    await nameField.fill('E2E Test Group');
+    // The modal is a two-step wizard: details, then members.
+    await page.locator('input[name="name"]').first().fill('E2E Test Group');
+    await page.getByRole('button', { name: /^next$/i }).click();
 
-    await page.getByRole('button', { name: /^create|create group|done|save/i }).last().click();
+    // Step 2 requires at least one member -- that validation is the app working,
+    // not a bug, so the test satisfies it rather than routing around it.
+    await page.locator('.friend-item').first().click();
+    await page.getByRole('button', { name: /^create group$/i }).click();
 
     await expect(async () => {
       expect(await page.locator('.group-card').count()).toBeGreaterThan(before);
