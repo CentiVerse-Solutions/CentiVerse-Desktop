@@ -14,8 +14,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -74,8 +74,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -110,8 +110,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -164,8 +164,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -200,8 +200,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -266,8 +266,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -332,8 +332,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -380,8 +380,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -422,8 +422,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -464,8 +464,8 @@ export const mockGroups = [
     members: [
       {
         id: 1,
-        name: "You",
-        email: "you@example.com",
+        name: "Karthik",
+        email: "karthik@example.com",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -518,7 +518,7 @@ export const mockExpenses = [
     date: "2025-01-05T08:15:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[0].members,
@@ -649,7 +649,7 @@ export const mockExpenses = [
     date: "2025-01-02T10:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[1].members,
@@ -708,7 +708,7 @@ export const mockExpenses = [
     date: "2025-01-22T16:10:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[1].members,
@@ -770,7 +770,7 @@ export const mockExpenses = [
     date: "2025-02-20T15:45:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[1].members,
@@ -784,7 +784,7 @@ export const mockExpenses = [
     date: "2025-02-22T16:10:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[1].members,
@@ -801,7 +801,7 @@ export const mockExpenses = [
     date: "2025-03-02T10:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[1].members,
@@ -832,7 +832,7 @@ export const mockExpenses = [
     date: "2025-01-10T13:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[2].members,
@@ -913,7 +913,7 @@ export const mockExpenses = [
     date: "2025-02-15T08:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[3].members,
@@ -971,7 +971,7 @@ export const mockExpenses = [
     date: "2025-01-01T00:01:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[4].members,
@@ -1029,7 +1029,7 @@ export const mockExpenses = [
     date: "2025-01-20T16:30:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[5].members,
@@ -1087,7 +1087,7 @@ export const mockExpenses = [
     date: "2025-02-25T11:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[6].members,
@@ -1145,7 +1145,7 @@ export const mockExpenses = [
     date: "2025-03-08T12:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[7].members,
@@ -1189,7 +1189,7 @@ export const mockExpenses = [
     date: "2025-01-30T09:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[8].members,
@@ -1247,7 +1247,7 @@ export const mockExpenses = [
     date: "2025-02-10T18:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: mockGroups[9].members,
@@ -1305,13 +1305,13 @@ export const mockExpenses = [
     date: "2025-01-15T20:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1341,7 +1341,7 @@ export const mockExpenses = [
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1366,7 +1366,7 @@ export const mockExpenses = [
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1385,13 +1385,13 @@ export const mockExpenses = [
     date: "2025-02-18T14:00:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1421,7 +1421,7 @@ export const mockExpenses = [
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1450,13 +1450,13 @@ export const mockExpenses = [
     date: "2025-03-20T20:30:00",
     paidBy: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     participants: [
       {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
       {
@@ -1709,7 +1709,7 @@ export const mockActivityLog = [
     timestamp: "2025-03-20T20:30:00",
     user: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     data: {
@@ -1747,7 +1747,7 @@ export const mockActivityLog = [
     timestamp: "2025-03-01T14:00:00",
     user: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     data: {
@@ -1776,7 +1776,7 @@ export const mockActivityLog = [
     timestamp: "2025-02-15T11:30:00",
     user: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     data: {
@@ -1822,7 +1822,7 @@ export const mockActivityLog = [
     timestamp: "2025-01-25T13:15:00",
     user: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     data: {
@@ -1836,7 +1836,7 @@ export const mockActivityLog = [
     timestamp: "2025-01-20T14:45:00",
     user: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     data: {
@@ -2064,7 +2064,7 @@ export const mockNotifications = [
       groupId: null,
       addedBy: {
         id: 1,
-        name: "You",
+        name: "Karthik",
         avatar: "https://randomuser.me/api/portraits/men/32.jpg",
       },
     },
@@ -2316,7 +2316,7 @@ export const mockPaymentHistory = [
     },
     to: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     amount: 2000,
@@ -2329,7 +2329,7 @@ export const mockPaymentHistory = [
     date: "2025-03-10T16:30:00",
     from: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     to: {
@@ -2352,7 +2352,7 @@ export const mockPaymentHistory = [
     },
     to: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     amount: 3450,
@@ -2365,7 +2365,7 @@ export const mockPaymentHistory = [
     date: "2025-02-20T13:45:00",
     from: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     to: {
@@ -2388,7 +2388,7 @@ export const mockPaymentHistory = [
     },
     to: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     amount: 750,
@@ -2401,7 +2401,7 @@ export const mockPaymentHistory = [
     date: "2025-01-25T09:45:00",
     from: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     to: {
@@ -2424,7 +2424,7 @@ export const mockPaymentHistory = [
     },
     to: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     amount: 1500,
@@ -2437,7 +2437,7 @@ export const mockPaymentHistory = [
     date: "2025-01-05T14:30:00",
     from: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     to: {
@@ -2455,7 +2455,7 @@ export const mockPaymentHistory = [
     date: "2025-03-22T09:15:00",
     from: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     to: {
@@ -2478,7 +2478,7 @@ export const mockPaymentHistory = [
     },
     to: {
       id: 1,
-      name: "You",
+      name: "Karthik",
       avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     },
     amount: 1825.0,
@@ -2507,8 +2507,8 @@ export const mockCurrencies = [
 export const mockUserSettings = {
   profile: {
     id: 1,
-    name: "You",
-    email: "you@example.com",
+    name: "Karthik",
+    email: "karthik@example.com",
     avatar: "https://randomuser.me/api/portraits/men/32.jpg",
     phone: "+91 98765 12345",
     defaultCurrency: "INR",

@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { formatCurrency, formatDate, timeAgo } from '../../../utils/formatters';
+import { VIEWER_ID } from '../../../shared/people/viewer';
 
 // Create MUI theme extension with your color palette
 const colorPalette = {
@@ -276,7 +277,7 @@ const ActivityItem = ({ activity }) => {
                                 variant="subtitle1"
                                 className="font-bold"
                                 sx={{
-                                    color: activity.paidBy.name === 'You'
+                                    color: activity.paidBy.id === VIEWER_ID
                                         ? colorPalette.tealDark
                                         : colorPalette.darkAccent
                                 }}
@@ -284,23 +285,23 @@ const ActivityItem = ({ activity }) => {
                                 {formatCurrency(activity.amount)}
                             </Typography>
 
-                            {activity.type === 'expense' && activity.paidBy.name !== 'You' && (
+                            {activity.type === 'expense' && activity.paidBy.id !== VIEWER_ID && (
                                 <Typography
                                     variant="caption"
                                     className="font-medium"
                                     sx={{ color: colorPalette.youOweColor }}
                                 >
-                                    You owe {formatCurrency(activity.participants.find(p => p.name === 'You')?.amount || 0)}
+                                    You owe {formatCurrency(activity.participants.find(p => p.id === VIEWER_ID)?.amount || 0)}
                                 </Typography>
                             )}
 
-                            {activity.type === 'expense' && activity.paidBy.name === 'You' && (
+                            {activity.type === 'expense' && activity.paidBy.id === VIEWER_ID && (
                                 <Typography
                                     variant="caption"
                                     className="font-medium"
                                     sx={{ color: colorPalette.youAreOwedColor }}
                                 >
-                                    You lent {formatCurrency(activity.amount - (activity.participants.find(p => p.name === 'You')?.amount || 0))}
+                                    You lent {formatCurrency(activity.amount - (activity.participants.find(p => p.id === VIEWER_ID)?.amount || 0))}
                                 </Typography>
                             )}
 

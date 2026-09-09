@@ -39,6 +39,7 @@ import './GroupDetails.css';
 
 // Import mock data for testing
 import { mockGroups, mockExpenses, mockFriends } from '../../utils/mockData';
+import { VIEWER_ID } from '../../shared/people/viewer';
 
 // Utility functions for financial calculations - moved from component for clarity
 const calculateExactSplit = (amount, numParticipants) => {
@@ -442,7 +443,7 @@ const GroupDetails = () => {
 
         // Find the payer object
         const payer = paidBy === 'you'
-            ? group.members.find(m => m.name === 'You')
+            ? group.members.find(m => m.id === VIEWER_ID)
             : group.members.find(m => m.id === parseInt(paidBy));
 
         if (!payer) {
@@ -581,7 +582,7 @@ const GroupDetails = () => {
             date: new Date().toISOString().slice(0, 10),
             paidBy: balance.balance < 0
                 ? member // They owe you
-                : group.members.find(m => m.name === 'You'), // You owe them
+                : group.members.find(m => m.id === VIEWER_ID), // You owe them
             category: {
                 id: 'other',
                 name: 'Settlement',
@@ -589,7 +590,7 @@ const GroupDetails = () => {
             },
             participants: [
                 member,
-                group.members.find(m => m.name === 'You')
+                group.members.find(m => m.id === VIEWER_ID)
             ],
             isSettlement: true
         };
@@ -624,7 +625,7 @@ const GroupDetails = () => {
 
         // Find the member
         const member = group.members.find(m => m.id === memberId);
-        if (!member || member.name === 'You') return;
+        if (!member || member.id === VIEWER_ID) return;
 
         // Set up confirmation dialog
         setMemberToRemove(member);
@@ -722,11 +723,11 @@ const GroupDetails = () => {
         // Filter by who paid
         if (expenseFilter === 'you_paid') {
             result = result.filter(expense =>
-                expense.paidBy.name === 'You'
+                expense.paidBy.id === VIEWER_ID
             );
         } else if (expenseFilter === 'you_involved') {
             result = result.filter(expense =>
-                expense.participants.some(p => p.name === 'You')
+                expense.participants.some(p => p.id === VIEWER_ID)
             );
         }
 
@@ -874,7 +875,7 @@ const GroupDetails = () => {
 
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const myExpenses = expenses.filter(expense =>
-        expense.paidBy.name === "You"
+        expense.paidBy.id === VIEWER_ID
     ).reduce((sum, expense) => sum + expense.amount, 0);
 
     // Calculate split info
@@ -1285,8 +1286,8 @@ const GroupDetails = () => {
                             </div>
                             <div className="quick-stat">
                                 <span className="quick-stat-label">Your Balance</span>
-                                <span className={`quick-stat-value ${balances.find(b => b.name === 'You')?.balance > 0 ? 'positive' : balances.find(b => b.name === 'You')?.balance < 0 ? 'negative' : ''}`}>
-                                    {formatCurrency(balances.find(b => b.name === 'You')?.balance || 0)}
+                                <span className={`quick-stat-value ${balances.find(b => b.id === VIEWER_ID)?.balance > 0 ? 'positive' : balances.find(b => b.id === VIEWER_ID)?.balance < 0 ? 'negative' : ''}`}>
+                                    {formatCurrency(balances.find(b => b.id === VIEWER_ID)?.balance || 0)}
                                 </span>
                             </div>
                             <div className="quick-stat">
@@ -1378,13 +1379,13 @@ const GroupDetails = () => {
                         whileTap="tap"
                     >
                         <h3 className="summary-title">YOUR BALANCE</h3>
-                        <p className={`summary-value ${balances.find(b => b.name === 'You')?.balance > 0 ? 'positive' : balances.find(b => b.name === 'You')?.balance < 0 ? 'negative' : ''}`}>
-                            {formatCurrency(balances.find(b => b.name === 'You')?.balance || 0)}
+                        <p className={`summary-value ${balances.find(b => b.id === VIEWER_ID)?.balance > 0 ? 'positive' : balances.find(b => b.id === VIEWER_ID)?.balance < 0 ? 'negative' : ''}`}>
+                            {formatCurrency(balances.find(b => b.id === VIEWER_ID)?.balance || 0)}
                         </p>
                         <div className="summary-trend">
-                            {balances.find(b => b.name === 'You')?.balance !== 0 ? (
+                            {balances.find(b => b.id === VIEWER_ID)?.balance !== 0 ? (
                                 <span className="trend-text">
-                                    {balances.find(b => b.name === 'You')?.balance > 0
+                                    {balances.find(b => b.id === VIEWER_ID)?.balance > 0
                                         ? 'You are owed money'
                                         : 'You owe money'}
                                 </span>
@@ -1594,7 +1595,7 @@ const GroupDetails = () => {
                                             <motion.div
                                                 layout
                                                 key={expense.id || index}
-                                                className={`expense-card ${expense.isSettlement ? 'settlement' : ''} ${expense.paidBy.name === 'You' ? 'you-paid' : ''}`}
+                                                className={`expense-card ${expense.isSettlement ? 'settlement' : ''} ${expense.paidBy.id === VIEWER_ID ? 'you-paid' : ''}`}
                                                 variants={cardVariants}
                                                 initial="hidden"
                                                 animate="visible"
@@ -1626,7 +1627,7 @@ const GroupDetails = () => {
                                                         <div className="expense-amount-section">
                                                             <span className="expense-amount">{formatCurrency(expense.amount)}</span>
                                                             <p className="expense-payer">
-                                                                {expense.paidBy.name === 'You' ? (
+                                                                {expense.paidBy.id === VIEWER_ID ? (
                                                                     <span>You paid</span>
                                                                 ) : (
                                                                     <span>{expense.paidBy.name} paid</span>
@@ -1655,12 +1656,12 @@ const GroupDetails = () => {
                                                         </div>
 
                                                         <div className="expense-balance">
-                                                            {expense.paidBy.name === 'You' ? (
+                                                            {expense.paidBy.id === VIEWER_ID ? (
                                                                 <div className="balance-item positive">
                                                                     <ArrowDownLeft size={14} />
                                                                     <span>You get back {formatCurrency(expense.amount - (expense.amount / expense.participants.length))}</span>
                                                                 </div>
-                                                            ) : expense.participants.some(p => p.name === 'You') ? (
+                                                            ) : expense.participants.some(p => p.id === VIEWER_ID) ? (
                                                                 <div className="balance-item negative">
                                                                     <ArrowUpRight size={14} />
                                                                     <span>You owe {formatCurrency(expense.amount / expense.participants.length)}</span>
@@ -1694,7 +1695,7 @@ const GroupDetails = () => {
                                                                 >
                                                                     <Trash2 size={14} />
                                                                 </motion.button>
-                                                                {expense.paidBy.name !== 'You' && expense.participants.some(p => p.name === 'You') && (
+                                                                {expense.paidBy.id !== VIEWER_ID && expense.participants.some(p => p.id === VIEWER_ID) && (
                                                                     <motion.button
                                                                         className="expense-action-btn primary"
                                                                         whileHover={{ scale: 1.1 }}
@@ -1755,8 +1756,8 @@ const GroupDetails = () => {
                                     <div className="balance-overview-card">
                                         <div className="balance-header">
                                             <h4>Total Balance</h4>
-                                            <span className={`balance-value ${balances.find(b => b.name === 'You')?.balance > 0 ? 'positive' : balances.find(b => b.name === 'You')?.balance < 0 ? 'negative' : ''}`}>
-                                                {formatCurrency(balances.find(b => b.name === 'You')?.balance || 0)}
+                                            <span className={`balance-value ${balances.find(b => b.id === VIEWER_ID)?.balance > 0 ? 'positive' : balances.find(b => b.id === VIEWER_ID)?.balance < 0 ? 'negative' : ''}`}>
+                                                {formatCurrency(balances.find(b => b.id === VIEWER_ID)?.balance || 0)}
                                             </span>
                                         </div>
                                         <div className="balance-details">
@@ -1781,7 +1782,7 @@ const GroupDetails = () => {
                             >
                                 <h3 className="section-title">Member Balances</h3>
                                 <div className="balance-cards">
-                                    {balances.filter(balance => balance.name !== 'You').map((balance, index) => (
+                                    {balances.filter(balance => balance.id !== VIEWER_ID).map((balance, index) => (
                                         <motion.div
                                             key={balance.id}
                                             className={`balance-card ${balance.balance < 0 ? 'you-are-owed' : balance.balance > 0 ? 'you-owe' : 'settled'}`}
@@ -2466,7 +2467,7 @@ const GroupDetails = () => {
                                             <img src={member.avatar} alt={member.name} />
                                         </div>
                                         <div className="member-info">
-                                            <h4 className="member-name">{member.name} {member.name === 'You' && <span className="member-you-badge">You</span>}</h4>
+                                            <h4 className="member-name">{member.name} {member.id === VIEWER_ID && <span className="member-you-badge">You</span>}</h4>
                                             <p className="member-email">{member.email}</p>
 
                                             <div className="member-stats">
@@ -2493,7 +2494,7 @@ const GroupDetails = () => {
                                         </div>
 
                                         <div className="member-actions">
-                                            {member.name !== 'You' && (
+                                            {member.id !== VIEWER_ID && (
                                                 <>
                                                     <motion.button
                                                         className="member-action-btn primary"
@@ -2756,7 +2757,7 @@ const GroupDetails = () => {
                                                         className="modern-select"
                                                     >
                                                         <option value="you">You</option>
-                                                        {group.members.filter(m => m.name !== 'You').map(member => (
+                                                        {group.members.filter(m => m.id !== VIEWER_ID).map(member => (
                                                             <option key={member.id} value={member.id}>{member.name}</option>
                                                         ))}
                                                     </select>
