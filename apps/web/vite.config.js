@@ -12,4 +12,10 @@ export default defineConfig({
   },
   server: { port: 5173, strictPort: true },
   build: { outDir: 'dist', sourcemap: true },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/setupTests.js',
+    css: false,
+  },
 });
