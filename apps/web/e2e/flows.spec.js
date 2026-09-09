@@ -33,10 +33,9 @@ test.describe('2. create a group', () => {
 
     const before = await page.locator('.group-card').count();
 
-    const createButton = page
-      .getByRole('button', { name: /create|new group|add group/i })
-      .first();
-    await createButton.click();
+    // Scope to the page: the sidebar also has a "Create New Group" control.
+    await page.locator('.groups-page').getByRole('button', { name: /new group/i }).first().click();
+    await expect(page.locator('input[name="name"]').first()).toBeVisible({ timeout: 5_000 });
 
     const nameField = page.locator('input[name="name"], input#groupName, input[placeholder*="name" i]').first();
     await nameField.fill('E2E Test Group');

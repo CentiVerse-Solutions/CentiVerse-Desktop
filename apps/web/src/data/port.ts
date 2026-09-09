@@ -44,7 +44,7 @@ export interface Expense {
   /** Derived by @centiverse/core, never hand-authored. */
   shares: Array<{ userId: UserId; amount: Money }>;
   participants: Person[];
-  category?: { id: number; name: string; icon: string };
+  category?: { id: number | string; name: string; icon: string };
   notes?: string;
   receipt?: string;
   isSettlement?: boolean;
@@ -127,6 +127,7 @@ export interface CreateExpenseInput {
     | { kind: 'PERCENT'; shares: Array<{ userId: UserId; bps: number }> }
     | { kind: 'SHARES'; shares: Array<{ userId: UserId; weight: number }> };
   categoryId?: number;
+  category?: { id: number | string; name: string; icon: string };
   notes?: string;
 }
 

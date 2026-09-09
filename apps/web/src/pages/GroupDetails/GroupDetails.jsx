@@ -486,6 +486,11 @@ const GroupDetails = () => {
                 paidByUserId: payer.id,
                 participantIds,
                 strategy,
+                category: {
+                    id: category,
+                    name: getCategoryName(category),
+                    icon: getCategoryIcon(category),
+                },
                 ...(notes ? { notes } : {}),
             },
             {
@@ -882,6 +887,7 @@ const GroupDetails = () => {
     // Get unique categories from expenses
     const categories = {};
     expenses.forEach(expense => {
+        if (!expense.category) return;
         if (!categories[expense.category.id]) {
             categories[expense.category.id] = {
                 ...expense.category,
@@ -1561,7 +1567,7 @@ const GroupDetails = () => {
                                                 <div className="expense-content">
                                                     <div className="expense-header">
                                                         <div className="expense-category-icon">
-                                                            <span role="img" aria-label={expense.category.name}>{expense.category.icon}</span>
+                                                            <span role="img" aria-label={expense.category?.name ?? 'Uncategorised'}>{expense.category?.icon ?? '🧾'}</span>
                                                         </div>
 
                                                         <div className="expense-title-section">
@@ -2306,6 +2312,7 @@ const GroupDetails = () => {
                                                         const categoryCounts = {};
 
                                                         expenses.forEach(expense => {
+                                                            if (!expense.category) return;
                                                             const categoryId = expense.category.id;
 
                                                             if (!categoryCounts[categoryId]) {

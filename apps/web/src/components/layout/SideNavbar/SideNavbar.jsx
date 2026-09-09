@@ -2,8 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SideNavbar.css';
+import { useViewerQuery } from '../../../data/hooks';
 
 const SideNavbar = ({ isOpen, toggleSideNav, groups = [] }) => {
+    const { data: viewer } = useViewerQuery();
     const location = useLocation();
     const currentPath = location.pathname;
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
@@ -344,11 +346,11 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups = [] }) => {
                 <motion.div className="user-profile-section" variants={itemVariants}>
                     <Link to="/account" className="user-profile-link">
                         <div className="user-avatar">
-                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Your profile" />
+                            <img src={viewer?.avatar} alt="Your profile" />
                         </div>
                         <div className="user-info">
-                            <span className="user-name">Your Name</span>
-                            <span className="user-email">your.email@example.com</span>
+                            <span className="user-name">{viewer?.name ?? '—'}</span>
+                            <span className="user-email">{viewer?.email ?? ''}</span>
                         </div>
                     </Link>
                 </motion.div>

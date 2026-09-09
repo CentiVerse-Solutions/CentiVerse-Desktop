@@ -245,6 +245,7 @@ export const mockPort: DataPort = {
         payers: [{ userId: input.paidByUserId, amount: total }],
         shares: unwrap(result).map((s) => ({ userId: Number(s.userId), amount: s.amount })),
         participants: input.participantIds.map(personOf),
+        ...(input.category !== undefined ? { category: input.category } : {}),
         ...(input.notes !== undefined ? { notes: input.notes } : {}),
       };
 
