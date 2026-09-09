@@ -1,5 +1,6 @@
 import { type Money, money } from '../money';
 import type { UserId, Share } from '../types';
+import { compareIds } from '../compare';
 
 /**
  * §4.3 -- largest remainder with a deterministic tie-break.
@@ -35,7 +36,7 @@ const allocate = (
   // Rank by fractional part DESC, then userId ASC. Both keys are needed: the
   // fraction decides who is owed the unit, the id makes ties reproducible.
   const ranked = [...floors].sort(
-    (a, b) => b.fraction - a.fraction || (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0),
+    (a, b) => b.fraction - a.fraction || compareIds(a.userId, b.userId),
   );
 
   const bonus = new Set<UserId>();

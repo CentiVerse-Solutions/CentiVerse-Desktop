@@ -3,6 +3,7 @@ import { type SplitError, splitError } from '../errors';
 import { type Result, ok, err } from '../result';
 import type { Payer, Share, UserId } from '../types';
 import { allocateByWeight, allocateEvenly } from './allocate';
+import { apportionAncillary } from './itemize';
 import type { SplitInput, SplitStrategy } from './strategies';
 
 export type { SplitInput, SplitStrategy };
@@ -180,62 +181,29 @@ const adjustmentShares = (
   );
 };
 
-/** Each item splits evenly among its claimants, per item, then sums (§4.2.1). */
+/**
+ * The ITEMIZED strategy delegates to apportionAncillary rather than repeating
+ * the per-item allocation. Non-negotiable 2 means one implementation of any
+ * split rule; two would eventually disagree.
+ */
 const itemizedShares = (
   total: Money,
   items: ReadonlyArray<{ amount: Money; participants: readonly UserId[] }>,
   tax: Money | undefined,
   tip: Money | undefined,
-): Result<Share[], SplitError> => {
-  if (items.length === 0) {
-    return err(splitError('NO_PARTICIPANTS', 'an itemized split needs at least one item'));
-  }
-
-  const running = new Map<UserId, number>();
-  const bump = (userId: UserId, minor: number) =>
-    running.set(userId, (running.get(userId) ?? 0) + minor);
-
-  for (const item of items) {
-    if (item.participants.length === 0) {
-      return err(splitError('UNCLAIMED_ITEMS', 'every item must be claimed by someone'));
-    }
-    if (item.amount.currency !== total.currency) {
-      return err(
-        splitError(
-          'CURRENCY_MISMATCH',
-          `an item is in ${item.amount.currency}, expense is in ${total.currency}`,
-        ),
-      );
-    }
-    for (const s of allocateEvenly(item.amount, item.participants)) bump(s.userId, s.amount.minor);
-  }
-
-  // Tax and tip are apportioned pro-rata by claimed subtotal (§4.2.1).
-  const claimedSubtotal = [...running.values()].reduce((a, b) => a + b, 0);
-  const ancillary = (tax?.minor ?? 0) + (tip?.minor ?? 0);
-  if (ancillary !== 0) {
-    const weights = [...running.entries()].map(([userId, minor]) => ({ userId, weight: minor }));
-    for (const s of allocateByWeight(money(ancillary, total.currency), weights)) {
-      bump(s.userId, s.amount.minor);
-    }
-  }
-
-  const shares = [...running.entries()].map(([userId, minor]) => ({
-    userId,
-    amount: money(minor, total.currency),
-  }));
-
-  const assigned = claimedSubtotal + ancillary;
-  if (assigned !== total.minor) {
-    return err(
-      splitError(
-        'RECONCILIATION_FAILED',
-        `items plus tax and tip come to ${assigned} but the total is ${total.minor}`,
-      ),
-    );
-  }
-  return ok(shares);
-};
+): Result<Share[], SplitError> =>
+  apportionAncillary({
+    items: items.map((item, i) => ({
+      id: `item-${i}`,
+      label: `item-${i}`,
+      amount: item.amount,
+      claimedBy: item.participants,
+    })),
+    ...(tax !== undefined ? { tax } : {}),
+    ...(tip !== undefined ? { tip } : {}),
+    printedTotal: total,
+    unclaimedPolicy: 'BLOCK',
+  });
 
 const dispatch = (input: SplitInput): Result<Share[], SplitError> => {
   const { total, strategy } = input;
@@ -272,7 +240,17 @@ export const computeShares = (input: SplitInput): Result<Share[], SplitError> =>
   const result = dispatch(input);
   if (!result.ok) return result;
 
-  // §4.3: assert the invariant here as well as in tests and in the database.
+  // §4.3: "Enforce it three times: as an assertion at the end of computeShares,
+  // as a property-based test, and as a database CHECK." This is the first of the
+  // three.
+  //
+  // It is deliberately unreachable: every strategy above either allocates via
+  // the conserving allocator or validates its own sum before returning. That is
+  // exactly why it exists -- it fires only if a future strategy breaks the
+  // invariant, and it is the last line of defence before a wrong number reaches
+  // a user's balance. It is excluded from coverage because reaching it requires
+  // a bug, not an input.
+  /* v8 ignore start */
   const assigned = result.value.reduce((acc, s) => acc + s.amount.minor, 0);
   if (assigned !== total.minor) {
     return err(
@@ -282,6 +260,7 @@ export const computeShares = (input: SplitInput): Result<Share[], SplitError> =>
       ),
     );
   }
+  /* v8 ignore stop */
 
   return result;
 };

@@ -1,6 +1,7 @@
 import type { CurrencyCode } from '../currency';
 import { type Money, money } from '../money';
 import type { UserId } from '../types';
+import { compareIds } from '../compare';
 
 export interface Transfer {
   readonly from: UserId;
@@ -35,7 +36,7 @@ export const simplifyDebts = (
   const byAmountThenId = (
     a: { userId: UserId; minor: number },
     b: { userId: UserId; minor: number },
-  ) => b.minor - a.minor || (a.userId < b.userId ? -1 : a.userId > b.userId ? 1 : 0);
+  ) => b.minor - a.minor || compareIds(a.userId, b.userId);
 
   debtors.sort(byAmountThenId);
   creditors.sort(byAmountThenId);

@@ -3,6 +3,7 @@ import { type SplitError, splitError } from '../errors';
 import { type Result, ok, err } from '../result';
 import type { Share, UserId } from '../types';
 import { allocateByWeight, allocateEvenly } from './allocate';
+import { compareIds } from '../compare';
 
 /**
  * §4.2.1 -- a restaurant bill is never just line items. This is the domain half
@@ -134,7 +135,7 @@ export const apportionAncillary = (it: Itemization): Result<Share[], SplitError>
 
   return ok(
     [...running.entries()]
-      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .sort(([a], [b]) => compareIds(a, b))
       .map(([userId, minor]) => ({ userId, amount: money(minor, currency) })),
   );
 };
