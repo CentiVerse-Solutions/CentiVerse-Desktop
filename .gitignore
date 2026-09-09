@@ -12,11 +12,10 @@
 /build
 /dist
 
-# Environment and local configuration
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Environment and local configuration -- never commit real secrets
+.env
+.env.*
+!.env.example
 
 # Log files
 npm-debug.log*
@@ -34,3 +33,11 @@ Thumbs.db
 # IDE and editor folders (optional)
 .vscode/
 .idea/
+
+# Agent / planning scratch output
+Claude outputs/
+.claude/
+
+# Local scratch
+.tmp/
+test.js
