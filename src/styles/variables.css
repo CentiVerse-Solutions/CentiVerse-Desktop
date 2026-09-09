@@ -1,0 +1,201 @@
+/* Base CSS Variables for our app */
+:root {
+  /* Primary colors */
+  --teal: #69a297;
+  --teal-light: #84b59f;
+  --teal-dark: #50808e;
+
+  /* Secondary colors */
+  --sage: #a3c9a8;
+  --cream: #ddd8c4;
+  --dark-accent: #2c3e50;
+
+  /* Text colors */
+  --text-primary: #2c3e50;
+  --text-secondary: #607d8b;
+
+  /* Background colors */
+  --background: #f8f9fa;
+  --paper: #ffffff;
+
+  /* Status colors */
+  --expense-color: #50808e;
+  --expense-bg: rgba(80, 128, 142, 0.1);
+  --payment-color: #9c27b0;
+  --payment-bg: rgba(156, 39, 176, 0.1);
+  --settlement-color: #4caf50;
+  --settlement-bg: rgba(76, 175, 80, 0.1);
+  --you-owe-color: #ff9800;
+  --you-owe-bg: rgba(255, 152, 0, 0.1);
+  --you-are-owed-color: #2196f3;
+  --you-are-owed-bg: rgba(33, 150, 243, 0.1);
+
+  /* Dimensions */
+  --border-radius: 12px;
+  --card-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  --card-shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.08);
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-default: 0.3s ease;
+
+  /* Font weights */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Font sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+}
+
+/* Dark mode overrides - these will be set programmatically from ThemeContext */
+.dark-mode {
+  --background: #1a242f;
+  --paper: #2c3e50;
+  --text-primary: #ecf0f1;
+  --text-secondary: #b0bec5;
+  --teal: #84b59f;
+  --teal-light: #a3c9a8;
+  --dark-accent: #1a242f;
+
+  --card-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.4);
+
+  --expense-color: #6fa0ae;
+  --expense-bg: rgba(111, 160, 174, 0.1);
+  --payment-color: #ce93d8;
+  --payment-bg: rgba(206, 147, 216, 0.1);
+  --settlement-color: #81c784;
+  --settlement-bg: rgba(129, 199, 132, 0.1);
+  --you-owe-color: #ffb74d;
+  --you-owe-bg: rgba(255, 183, 77, 0.1);
+  --you-are-owed-color: #64b5f6;
+  --you-are-owed-bg: rgba(100, 181, 246, 0.1);
+}
+
+/* Utility classes */
+.text-expense {
+  color: var(--expense-color);
+}
+.text-payment {
+  color: var(--payment-color);
+}
+.text-settlement {
+  color: var(--settlement-color);
+}
+.text-you-owe {
+  color: var(--you-owe-color);
+}
+.text-you-are-owed {
+  color: var(--you-are-owed-color);
+}
+
+.bg-expense {
+  background-color: var(--expense-bg);
+}
+.bg-payment {
+  background-color: var(--payment-bg);
+}
+.bg-settlement {
+  background-color: var(--settlement-bg);
+}
+.bg-you-owe {
+  background-color: var(--you-owe-bg);
+}
+.bg-you-are-owed {
+  background-color: var(--you-are-owed-bg);
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-default) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp var(--transition-default) forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn var(--transition-default) forwards;
+}
+
+/* Staggered animations */
+.stagger-item {
+  opacity: 0;
+}
+
+.stagger-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.stagger-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.stagger-item:nth-child(3) {
+  animation-delay: 0.15s;
+}
+.stagger-item:nth-child(4) {
+  animation-delay: 0.2s;
+}
+.stagger-item:nth-child(5) {
+  animation-delay: 0.25s;
+}
+.stagger-item:nth-child(6) {
+  animation-delay: 0.3s;
+}
+.stagger-item:nth-child(7) {
+  animation-delay: 0.35s;
+}
+.stagger-item:nth-child(8) {
+  animation-delay: 0.4s;
+}
+.stagger-item:nth-child(9) {
+  animation-delay: 0.45s;
+}
+.stagger-item:nth-child(10) {
+  animation-delay: 0.5s;
+}

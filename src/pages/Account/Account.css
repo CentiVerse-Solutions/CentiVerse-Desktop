@@ -15,6 +15,47 @@
   }
 }
 
+/* Success Message */
+.save-success-message {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background-color: #4caf50;
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.success-icon {
+  margin-right: 0.75rem;
+  font-size: 1.2rem;
+}
+
 /* Header */
 .account-header {
   display: flex;
@@ -72,8 +113,11 @@
   border-radius: 50%;
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.profile-pic.editable {
+  cursor: pointer;
 }
 
 .profile-pic:hover .edit-overlay {
@@ -96,8 +140,9 @@
   transition: opacity 0.3s ease;
 }
 
-.edit-overlay svg {
+.edit-overlay .icon {
   margin-bottom: 0.5rem;
+  font-size: 1.5rem;
 }
 
 /* User Info */
@@ -134,7 +179,7 @@
   background: none;
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
   text-align: left;
   color: var(--text-dark);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
@@ -160,22 +205,16 @@
 
 .menu-item:hover {
   background-color: rgba(105, 162, 151, 0.1);
+  transform: translateX(4px);
 }
 
 .menu-item.active {
   background-color: rgba(105, 162, 151, 0.15);
   color: var(--teal);
-}
-
-.menu-item.active svg {
-  color: var(--teal);
+  border-left: 4px solid var(--teal);
 }
 
 .menu-item.danger {
-  color: #e53935;
-}
-
-.menu-item.danger svg {
   color: #e53935;
 }
 
@@ -198,6 +237,29 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
+.section-active {
+  animation: pulse 1s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+  50% {
+    box-shadow: 0 6px 25px rgba(105, 162, 151, 0.3);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -215,6 +277,19 @@
   width: 40px;
   height: 2px;
   background-color: var(--teal-light);
+}
+
+.subsection-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem;
+  color: var(--text-dark);
+}
+
+.subsection-description {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1rem;
 }
 
 /* Form Styling */
@@ -259,6 +334,13 @@
   background-color: #f5f5f5;
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.form-group input.editable,
+.form-group select.editable {
+  border-color: #e0e0e0;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* Toggle Switch */
@@ -327,6 +409,7 @@ input:disabled + .toggle-label {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 .notification-group {
@@ -361,6 +444,255 @@ input:disabled + .toggle-label {
   margin-right: 1rem;
 }
 
+/* Category Chips */
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.category-chip {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.category-chip.selected {
+  background-color: rgba(105, 162, 151, 0.1);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+
+.category-icon {
+  margin-right: 0.5rem;
+  font-size: 1rem;
+}
+
+.category-chip:hover {
+  /* Removing hover styles since Framer Motion will handle this */
+}
+
+/* Notification Channels */
+.notification-channels {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.channel-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.channel-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.channel-option:hover {
+  background-color: #f5f5f5;
+}
+
+.channel-info {
+  display: flex;
+  align-items: center;
+}
+
+.channel-icon {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.channel-details h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.channel-details p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Payment Methods */
+.payment-methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-method-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.payment-method-item:hover {
+  background-color: #f5f5f5;
+}
+
+.payment-method-details {
+  flex: 1;
+}
+
+.payment-method-type {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.payment-icon {
+  font-size: 1.25rem;
+  margin-right: 0.75rem;
+  width: 30px;
+  height: 30px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-name {
+  font-weight: 600;
+  margin-right: 0.75rem;
+}
+
+.payment-method-info {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.payment-method-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn.set-default {
+  color: var(--teal);
+}
+
+.action-btn.set-default:hover {
+  background-color: rgba(105, 162, 151, 0.1);
+}
+
+.action-btn.remove {
+  color: #e53935;
+}
+
+.action-btn.remove:hover {
+  background-color: rgba(229, 57, 53, 0.1);
+}
+
+/* Security Section */
+.security-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.security-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.security-item:hover {
+  background-color: #f5f5f5;
+}
+
+.security-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.security-info p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* Support Section */
+.support-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.support-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.support-card:hover {
+  /* Removing hover styles since Framer Motion will handle this */
+}
+
+.support-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  width: 60px;
+  height: 60px;
+  background-color: #e9ecef;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.support-card h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.support-card p {
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1.25rem;
+  flex-grow: 1;
+}
+
+.support-card button {
+  width: 100%;
+}
+
 /* Account Actions */
 .account-actions {
   display: grid;
@@ -393,53 +725,18 @@ input:disabled + .toggle-label {
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  animation: slideUp 0.3s ease-out;
 }
 
-/* Button Variants */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  gap: 0.5rem;
-  border: none;
-}
-
-.btn-primary {
-  background-color: var(--teal);
-  color: white;
-  box-shadow: 0 2px 8px rgba(105, 162, 151, 0.2);
-}
-
-.btn-primary:hover {
-  background-color: var(--teal-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(105, 162, 151, 0.3);
-}
-
-.btn-outlined {
-  background-color: transparent;
-  color: var(--text-dark);
-  border: 1px solid #e0e0e0;
-}
-
-.btn-outlined:hover {
-  border-color: var(--teal);
-  background-color: rgba(105, 162, 151, 0.05);
-}
-
-.btn-danger {
-  background-color: transparent;
-  color: #e53935;
-  border: 1px solid #e53935;
-}
-
-.btn-danger:hover {
-  background-color: rgba(229, 57, 53, 0.1);
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Responsive Design */
@@ -459,6 +756,10 @@ input:disabled + .toggle-label {
 
   .user-info {
     margin-bottom: 1rem;
+  }
+
+  .support-container {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 }
 
@@ -481,9 +782,27 @@ input:disabled + .toggle-label {
 
   .account-actions-footer {
     flex-direction: column;
+    gap: 0.75rem;
   }
 
   .account-actions-footer button {
     width: 100%;
+  }
+
+  .payment-method-item,
+  .security-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .payment-method-actions,
+  .security-item button,
+  .security-item .toggle-switch {
+    margin-top: 1rem;
+    align-self: flex-end;
+  }
+
+  .support-container {
+    grid-template-columns: 1fr;
   }
 }
