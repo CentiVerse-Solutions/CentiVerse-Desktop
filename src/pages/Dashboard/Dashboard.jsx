@@ -14,9 +14,9 @@ import {
     ArrowDownRight,
     Check
 } from 'lucide-react';
-import {Button} from '../../components/common/Button/Button';
+import { Button } from '../../components/common/Button/Button';
 import SearchBar from '../../components/common/SearchBar/SearchBar';
-import {Avatar} from '../../components/common/Avatar/Avatar';
+import { Avatar } from '../../components/common/Avatar/Avatar';
 import { mockFriends, mockGroups, mockExpenses } from '../../utils/mockData';
 import './Dashboard.css';
 
@@ -53,7 +53,7 @@ const Dashboard = () => {
             .slice(0, 5)
             .map(expense => {
                 // Find the group this expense belongs to
-                const group = mockGroups.find(g => g.id === expense.groupId);
+                const group = expense.groupId ? mockGroups.find(g => g.id === expense.groupId) : null;
                 return {
                     ...expense,
                     group,
@@ -209,7 +209,7 @@ const Dashboard = () => {
                                             <h4 className="activity-title">{activity.description}</h4>
                                             <div className="activity-info">
                                                 <span className="activity-group">
-                                                    In {activity.group.name}
+                                                    {activity.group ? `In ${activity.group.name}` : 'Personal expense'}
                                                 </span>
                                             </div>
                                         </div>

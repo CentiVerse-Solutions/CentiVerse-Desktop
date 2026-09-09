@@ -47,7 +47,7 @@ const Activity = () => {
         // In a real app, this would come from your backend
         const enhancedExpenses = mockExpenses.map(expense => {
             // Find the group this expense belongs to
-            const group = mockGroups.find(g => g.id === expense.groupId);
+            const group = expense.groupId ? mockGroups.find(g => g.id === expense.groupId) : null;
 
             // Calculate settlement info
             const userIsPayer = expense.paidBy.id === currentUserId;
@@ -124,7 +124,7 @@ const Activity = () => {
             const query = searchQuery.toLowerCase();
             result = result.filter(activity =>
                 activity.description.toLowerCase().includes(query) ||
-                activity.group?.name.toLowerCase().includes(query) ||
+                (activity.group && activity.group.name.toLowerCase().includes(query)) ||
                 activity.paidBy?.name.toLowerCase().includes(query)
             );
         }
@@ -537,9 +537,13 @@ const Activity = () => {
                                                             )}
                                                         </div>
                                                         <span className="act-meta">
-                                                            <span className="act-group">
-                                                                {activity.group.name}
-                                                            </span>
+                                                            {activity.group ? (
+                                                                <span className="act-group">
+                                                                    {activity.group.name}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="act-group">Personal</span>
+                                                            )}
                                                             <span className="act-category">
                                                                 {activity.category.icon} {activity.category.name}
                                                             </span>
@@ -709,9 +713,13 @@ const Activity = () => {
 
                                                         <div className="act-detail-item">
                                                             <span className="act-detail-label">Group</span>
-                                                            <Link to={`/groups/${activity.groupId}`} className="act-detail-value link">
-                                                                {activity.group.name}
-                                                            </Link>
+                                                            {activity.group ? (
+                                                                <Link to={`/groups/${activity.groupId}`} className="act-detail-value link">
+                                                                    {activity.group.name}
+                                                                </Link>
+                                                            ) : (
+                                                                <span className="act-detail-value">Personal</span>
+                                                            )}
                                                         </div>
 
                                                         <div className="act-detail-item">

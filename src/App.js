@@ -8,7 +8,9 @@ import Friends from "./pages/Friends/Friends";
 import Activity from "./pages/Activity/Activity";
 import Account from "./pages/Account/Account";
 import AuthProvider from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext"; // Import our new ThemeProvider
 import GroupDetails from "./pages/GroupDetails/GroupDetails";
+import Groups from "./pages/Groups/Groups";
 import MainLayout from "./components/layout/MainLayout/MainLayout";
 
 // Mock authentication status - in a real app, this would come from your auth context
@@ -23,58 +25,69 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Landing page route outside the main layout */}
-          <Route path="/" element={<LandingPage />} />
+    <ThemeProvider>
+      {/* Wrap everything with ThemeProvider */}
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Landing page route outside the main layout */}
+            <Route path="/" element={<LandingPage />} />
 
-          {/* All protected pages inside the main layout */}
-          <Route path="/" element={<MainLayout />}>
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/activity"
-              element={
-                <ProtectedRoute>
-                  <Activity />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/account"
-              element={
-                <ProtectedRoute>
-                  <Account />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/groups/:groupId"
-              element={
-                <ProtectedRoute>
-                  <GroupDetails />
-                </ProtectedRoute>
-              }
-            />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* All protected pages inside the main layout */}
+            <Route path="/" element={<MainLayout />}>
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/friends"
+                element={
+                  <ProtectedRoute>
+                    <Friends />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/activity"
+                element={
+                  <ProtectedRoute>
+                    <Activity />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/account"
+                element={
+                  <ProtectedRoute>
+                    <Account />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/groups"
+                element={
+                  <ProtectedRoute>
+                    <Groups />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/groups/:groupId"
+                element={
+                  <ProtectedRoute>
+                    <GroupDetails />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

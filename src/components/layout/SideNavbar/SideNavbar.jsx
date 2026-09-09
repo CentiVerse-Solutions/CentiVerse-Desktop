@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SideNavbar.css';
 
-const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
+const SideNavbar = ({ isOpen, toggleSideNav, groups = [] }) => {
     const location = useLocation();
     const currentPath = location.pathname;
     const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
-    const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+    const sideNavRef = useRef(null);
 
     // Check screen size on mount and window resize
     useEffect(() => {
@@ -21,26 +21,36 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
             }
         };
 
-        // Set overlay visibility when sidebar opens on mobile
-        setIsOverlayVisible(isMobile && isOpen);
-
         window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, [isMobile, isOpen, toggleSideNav]);
+        // Call once on initial render
+        handleResize();
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [isOpen, toggleSideNav]);
 
     // Handle click outside to close on mobile
-    const handleOverlayClick = (e) => {
+    const handleOverlayClick = useCallback(() => {
         if (isMobile && isOpen) {
             toggleSideNav(false);
         }
-    };
+    }, [isMobile, isOpen, toggleSideNav]);
 
     // Keyboard accessibility
-    const handleKeyDown = (e) => {
+    const handleKeyDown = useCallback((e) => {
         if (e.key === 'Escape' && isOpen) {
             toggleSideNav(false);
         }
-    };
+    }, [isOpen, toggleSideNav]);
+
+    // Add keyboard event listener
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [handleKeyDown]);
 
     // Animation variants
     const sidebarVariants = {
@@ -93,37 +103,50 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
         open: {
             opacity: 0.5,
             display: "block",
-            transition: { duration: 0.2 }
+            transition: { duration: 0.3 }
         },
         closed: {
             opacity: 0,
             transitionEnd: {
                 display: "none"
             },
-            transition: { duration: 0.2 }
+            transition: { duration: 0.3 }
         }
     };
 
     // Split groups into pinned and regular
-    const pinnedGroups = groups ? groups.filter(group => group.isPinned) : [];
-    const regularGroups = groups ? groups.filter(group => !group.isPinned) : [];
+    const pinnedGroups = groups.filter(group => group.isPinned);
+    const regularGroups = groups.filter(group => !group.isPinned);
 
     // If there's no explicit isPinned property, just use the first 3 groups as "pinned"
     const displayPinnedGroups = pinnedGroups.length > 0 ?
         pinnedGroups :
-        (groups ? groups.slice(0, Math.min(3, groups.length)) : []);
+        groups.slice(0, Math.min(3, groups.length));
 
     const displayRegularGroups = pinnedGroups.length > 0 ?
         regularGroups :
-        (groups ? groups.slice(Math.min(3, groups.length)) : []);
+        groups.slice(Math.min(3, groups.length));
+
+    const handleCreateGroup = (e) => {
+        e.preventDefault();
+        console.log("Create new group");
+        // Add your logic here
+    }
+
+    const handleGroupOptions = (e, group) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("Group options for", group.name);
+        // Add your logic here
+    }
 
     return (
         <>
             {/* Mobile overlay */}
             <AnimatePresence>
-                {isMobile && isOpen && (
+                {isMobile && (
                     <motion.div
-                        className="side-nav-overlay"
+                        className={`side-nav-overlay ${isOpen ? 'visible' : ''}`}
                         initial="closed"
                         animate={isOpen ? "open" : "closed"}
                         exit="closed"
@@ -144,6 +167,7 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                 aria-expanded={isOpen}
                 aria-label="Main navigation"
                 role="navigation"
+                ref={sideNavRef}
             >
                 <div className="side-nav-header">
                     <motion.h2
@@ -175,10 +199,10 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                         className="create-group-btn"
                         whileHover={{ y: -3, boxShadow: "0 6px 20px rgba(105, 162, 151, 0.4)" }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => console.log("Create new group")}
+                        onClick={handleCreateGroup}
                     >
                         <span className="btn-icon">+</span>
-                        <span className="btn-text">Create New Group</span>
+                        <span>Create New Group</span>
                     </motion.button>
                 </motion.div>
 
@@ -193,18 +217,20 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                         </motion.h3>
                         <div className="side-nav-groups">
                             {displayPinnedGroups.map((group) => (
-                                <motion.div key={group.id} variants={itemVariants}>
+                                <motion.div key={group.id || `pinned-${group.name}`} variants={itemVariants}>
                                     <Link
                                         to={`/groups/${group.id}`}
                                         className={`nav-group-item ${currentPath === `/groups/${group.id}` ? 'active' : ''}`}
                                         aria-current={currentPath === `/groups/${group.id}` ? 'page' : undefined}
                                     >
                                         <div className="nav-group-avatar">
-                                            <img
-                                                src={group.avatar}
-                                                alt=""
-                                                aria-hidden="true"
-                                            />
+                                            {group.avatar && (
+                                                <img
+                                                    src={group.avatar}
+                                                    alt=""
+                                                    aria-hidden="true"
+                                                />
+                                            )}
                                         </div>
                                         <div className="nav-group-info">
                                             <span className="nav-group-name">{group.name}</span>
@@ -213,14 +239,11 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                                             )}
                                         </div>
                                         <motion.button
+                                            type="button"
                                             className="group-options-btn"
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                console.log("Group options for", group.name);
-                                            }}
+                                            onClick={(e) => handleGroupOptions(e, group)}
                                             aria-label={`Options for ${group.name}`}
                                         >
                                             ⋮
@@ -243,18 +266,20 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                     <div className="side-nav-groups">
                         {displayRegularGroups.length > 0 ? (
                             displayRegularGroups.map((group) => (
-                                <motion.div key={group.id} variants={itemVariants}>
+                                <motion.div key={group.id || `group-${group.name}`} variants={itemVariants}>
                                     <Link
                                         to={`/groups/${group.id}`}
                                         className={`nav-group-item ${currentPath === `/groups/${group.id}` ? 'active' : ''}`}
                                         aria-current={currentPath === `/groups/${group.id}` ? 'page' : undefined}
                                     >
                                         <div className="nav-group-avatar">
-                                            <img
-                                                src={group.avatar}
-                                                alt=""
-                                                aria-hidden="true"
-                                            />
+                                            {group.avatar && (
+                                                <img
+                                                    src={group.avatar}
+                                                    alt=""
+                                                    aria-hidden="true"
+                                                />
+                                            )}
                                         </div>
                                         <div className="nav-group-info">
                                             <span className="nav-group-name">{group.name}</span>
@@ -263,14 +288,11 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                                             )}
                                         </div>
                                         <motion.button
+                                            type="button"
                                             className="group-options-btn"
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                console.log("Group options for", group.name);
-                                            }}
+                                            onClick={(e) => handleGroupOptions(e, group)}
                                             aria-label={`Options for ${group.name}`}
                                         >
                                             ⋮
@@ -285,8 +307,9 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                             >
                                 <p>No groups found</p>
                                 <button
+                                    type="button"
                                     className="create-first-group-btn"
-                                    onClick={() => console.log("Create first group")}
+                                    onClick={handleCreateGroup}
                                 >
                                     Create your first group
                                 </button>
@@ -301,7 +324,6 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups }) => {
                         { path: "/dashboard", icon: "🏠", label: "Dashboard" },
                         { path: "/activity", icon: "📊", label: "Activity" },
                         { path: "/friends", icon: "👥", label: "Friends" },
-                        { path: "/settings", icon: "⚙️", label: "Settings" }
                     ].map((item) => (
                         <motion.div key={item.path} variants={itemVariants}>
                             <Link
