@@ -12,6 +12,7 @@ import { ThemeProvider } from "./context/ThemeContext"; // Import our new ThemeP
 import GroupDetails from "./pages/GroupDetails/GroupDetails";
 import Groups from "./pages/Groups/Groups";
 import MainLayout from "./components/layout/MainLayout/MainLayout";
+import QueryProvider from "./app/providers";
 
 // Mock authentication status - in a real app, this would come from your auth context
 const isAuthenticated = true; // Set to true for testing
@@ -27,7 +28,8 @@ function App() {
   return (
     <ThemeProvider>
       {/* Wrap everything with ThemeProvider */}
-      <AuthProvider>
+      <QueryProvider>
+        <AuthProvider>
         <BrowserRouter>
           <Routes>
             {/* Landing page route outside the main layout */}
@@ -86,7 +88,8 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </QueryProvider>
     </ThemeProvider>
   );
 }

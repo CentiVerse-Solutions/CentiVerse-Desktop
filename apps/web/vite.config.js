@@ -17,5 +17,8 @@ export default defineConfig({
     globals: true,
     setupFiles: './src/setupTests.js',
     css: false,
+    // No artificial latency in tests; the delay exists to exercise loading states
+    // in the browser, not to slow the suite down.
+    env: { VITE_MOCK_LATENCY_MS: '0' },
   },
 });
