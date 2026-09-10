@@ -16,7 +16,7 @@ const QuickAddExpense = ({
     handleParticipantChange,
     handleSaveExpense,
     toggleQuickAdd,
-    renderSplitDetails,
+    splitEditor,
 }) => (
     <motion.div
         className="modal-overlay glass-effect"
@@ -315,7 +315,7 @@ const QuickAddExpense = ({
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    {renderSplitDetails()}
+                                    {splitEditor}
                                 </motion.div>
                             </AnimatePresence>
                         </motion.div>
