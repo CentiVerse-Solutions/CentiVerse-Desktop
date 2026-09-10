@@ -36,7 +36,7 @@ const ExpenseSplitEditor = ({
         if (splitType === 'equal') {
             const parsedAmount = amount ? parseFloat(amount) : 0;
             const equalShares = parsedAmount > 0
-                ? calculateExactSplit(parsedAmount, participants.length)
+                ? calculateExactSplit(parsedAmount, participants)
                 : Array(participants.length).fill('0.00');
 
             return (

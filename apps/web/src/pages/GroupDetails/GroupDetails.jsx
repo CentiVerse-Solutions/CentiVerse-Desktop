@@ -259,7 +259,7 @@ const GroupDetails = () => {
 
         // For equal split - use exact split calculation
         if (splitType === 'equal') {
-            const equalShares = calculateExactSplit(parsedAmount, participants.length);
+            const equalShares = calculateExactSplit(parsedAmount, participants);
             const result = {};
 
             participants.forEach((participantId, index) => {
