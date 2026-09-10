@@ -126,3 +126,33 @@ test.describe('6. loading and error states render and recover', () => {
     expect(crashed).toBe(0);
   });
 });
+
+test.describe('7. every group tab renders (decomposition guard)', () => {
+  // §7.4 requires the group screen to stay visibly identical through the
+  // Phase 4 extraction. Lint caught a broken import in MembersTab that these
+  // flows did not, because nothing visited the tab -- so visit them all.
+  // The tab panel ids and their visible labels differ: totals is "Analysis",
+  // whiteboard is "Notes".
+  const tabs = [
+    { id: 'expenses', label: /expenses/i },
+    { id: 'balances', label: /balances/i },
+    { id: 'totals', label: /analysis/i },
+    { id: 'members', label: /members/i },
+    { id: 'whiteboard', label: /notes/i },
+  ];
+
+  for (const tab of tabs) {
+    test(`the ${tab.id} tab renders without crashing`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+
+      await page.addInitScript(() => window.localStorage.clear());
+      await page.goto('/groups/1');
+      await expect(page.locator('.group-details')).toBeVisible({ timeout: 15_000 });
+
+      await page.getByRole('tab', { name: tab.label }).click();
+      await expect(page.locator(`#${tab.id}-tab`)).toBeVisible({ timeout: 10_000 });
+      expect(errors).toEqual([]);
+    });
+  }
+});
