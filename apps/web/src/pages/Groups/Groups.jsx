@@ -334,7 +334,7 @@ const Groups = () => {
 
                 {showCreateModal && (
                     <NewGroupModal
-                                    isOpen
+                        isOpen
                         onClose={() => setShowCreateModal(false)}
                         onCreateGroup={(groupData) => {
                             handleCreateGroup(groupData);
@@ -471,7 +471,7 @@ const Groups = () => {
                             }}
                         >
                             <NewGroupModal
-                                    isOpen
+                                isOpen
                                 onClose={() => setShowCreateModal(false)}
                                 onCreateGroup={(groupData) => {
                                     handleCreateGroup(groupData);
