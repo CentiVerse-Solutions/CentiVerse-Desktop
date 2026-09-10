@@ -13,8 +13,10 @@
     "windows": [
       {
         "title": "centiverse",
-        "width": 800,
-        "height": 600,
+        "width": 1280,
+        "height": 832,
+        "minWidth": 1008,
+        "minHeight": 640,
         "resizable": true,
         "fullscreen": false
       }
