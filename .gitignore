@@ -40,7 +40,6 @@ Claude outputs/
 
 # Local scratch
 .tmp/
-test.js
 
 # pnpm
 .pnpm-store/
