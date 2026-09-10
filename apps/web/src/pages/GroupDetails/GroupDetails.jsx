@@ -44,6 +44,8 @@ import { useGroup, useGroupExpenses, useGroupBalances, useCreateExpense, useCrea
 import { toLegacyExpenses, toLegacyBalances } from '../../data/legacy';
 import { VIEWER_ID } from '../../shared/people/viewer';
 import TotalsTab from '../../features/groups/components/tabs/TotalsTab';
+import ExpenseFilters from '../../features/expenses/components/ExpenseFilters';
+import ExpensesTab from '../../features/expenses/components/ExpensesTab';
 
 // Utility functions for financial calculations - moved from component for clarity
 const calculateExactSplit = (amount, numParticipants) => {
@@ -1438,263 +1440,34 @@ const GroupDetails = () => {
 
                 {/* Filter Controls */}
                 {activeTab === 'expenses' && (
-                    <motion.div
-                        className="filter-controls"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        <div className="filter-group">
-                            <label>View</label>
-                            <div className="filter-options">
-                                <button
-                                    className={`filter-option ${expenseFilter === 'all' ? 'active' : ''}`}
-                                    onClick={() => setExpenseFilter('all')}
-                                >
-                                    All Expenses
-                                </button>
-                                <button
-                                    className={`filter-option ${expenseFilter === 'you_paid' ? 'active' : ''}`}
-                                    onClick={() => setExpenseFilter('you_paid')}
-                                >
-                                    You Paid
-                                </button>
-                                <button
-                                    className={`filter-option ${expenseFilter === 'you_involved' ? 'active' : ''}`}
-                                    onClick={() => setExpenseFilter('you_involved')}
-                                >
-                                    Involving You
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="filter-group">
-                            <label>Time</label>
-                            <div className="filter-options">
-                                <button
-                                    className={`filter-option ${timePeriod === 'all' ? 'active' : ''}`}
-                                    onClick={() => setTimePeriod('all')}
-                                >
-                                    All Time
-                                </button>
-                                <button
-                                    className={`filter-option ${timePeriod === 'this_month' ? 'active' : ''}`}
-                                    onClick={() => setTimePeriod('this_month')}
-                                >
-                                    This Month
-                                </button>
-                                <button
-                                    className={`filter-option ${timePeriod === 'last_month' ? 'active' : ''}`}
-                                    onClick={() => setTimePeriod('last_month')}
-                                >
-                                    Last Month
-                                </button>
-                                <button
-                                    className={`filter-option ${timePeriod === 'this_year' ? 'active' : ''}`}
-                                    onClick={() => setTimePeriod('this_year')}
-                                >
-                                    This Year
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="filter-group">
-                            <label>Sort</label>
-                            <div className="filter-options">
-                                <button
-                                    className={`filter-option ${sortBy === 'date_desc' ? 'active' : ''}`}
-                                    onClick={() => setSortBy('date_desc')}
-                                >
-                                    Newest First
-                                </button>
-                                <button
-                                    className={`filter-option ${sortBy === 'date_asc' ? 'active' : ''}`}
-                                    onClick={() => setSortBy('date_asc')}
-                                >
-                                    Oldest First
-                                </button>
-                                <button
-                                    className={`filter-option ${sortBy === 'amount_desc' ? 'active' : ''}`}
-                                    onClick={() => setSortBy('amount_desc')}
-                                >
-                                    Highest Amount
-                                </button>
-                                <button
-                                    className={`filter-option ${sortBy === 'amount_asc' ? 'active' : ''}`}
-                                    onClick={() => setSortBy('amount_asc')}
-                                >
-                                    Lowest Amount
-                                </button>
-                            </div>
-                        </div>
-                    </motion.div>
+                    <ExpenseFilters
+                        group={group}
+                        expenses={expenses}
+                        expenseFilter={expenseFilter}
+                        setExpenseFilter={setExpenseFilter}
+                        timePeriod={timePeriod}
+                        setTimePeriod={setTimePeriod}
+                        sortBy={sortBy}
+                        setSortBy={setSortBy}
+                    />
                 )}
 
                 {/* Tab Content */}
                 <div className="tab-content">
                     {/* Expenses Tab */}
                     {activeTab === 'expenses' && (
-                        <div
-                            className="expenses-list"
-                            role="tabpanel"
-                            id="expenses-tab"
-                            aria-labelledby="expenses-tab-btn"
-                        >
-                            <AnimatePresence>
-                                {filteredExpenses && filteredExpenses.length > 0 ? (
-                                    <motion.div
-                                        variants={containerVariants}
-                                        initial="hidden"
-                                        animate="visible"
-                                        className="expense-cards"
-                                    >
-                                        {filteredExpenses.map((expense, index) => (
-                                            <motion.div
-                                                layout
-                                                key={expense.id || index}
-                                                className={`expense-card ${expense.isSettlement ? 'settlement' : ''} ${expense.paidBy.id === VIEWER_ID ? 'you-paid' : ''}`}
-                                                variants={cardVariants}
-                                                initial="hidden"
-                                                animate="visible"
-                                                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                whileHover={{ y: -5, boxShadow: "0 12px 30px rgba(0, 0, 0, 0.1)" }}
-                                                onHoverStart={() => setHoveredExpense(expense.id)}
-                                                onHoverEnd={() => setHoveredExpense(null)}
-                                            >
-                                                <div className="expense-date-badge">
-                                                    <span className="date-month">{new Date(expense.date).toLocaleString('default', { month: 'short' })}</span>
-                                                    <span className="date-day">{new Date(expense.date).getDate()}</span>
-                                                </div>
-
-                                                <div className="expense-content">
-                                                    <div className="expense-header">
-                                                        <div className="expense-category-icon">
-                                                            <span role="img" aria-label={expense.category?.name ?? 'Uncategorised'}>{expense.category?.icon ?? '🧾'}</span>
-                                                        </div>
-
-                                                        <div className="expense-title-section">
-                                                            <h3 className="expense-title">{expense.description}</h3>
-                                                            <p className="expense-meta">
-                                                                <span className="expense-group">{group.name}</span>
-                                                                <span className="expense-time">{new Date(expense.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="expense-amount-section">
-                                                            <span className="expense-amount">{formatCurrency(expense.amount)}</span>
-                                                            <p className="expense-payer">
-                                                                {expense.paidBy.id === VIEWER_ID ? (
-                                                                    <span>You paid</span>
-                                                                ) : (
-                                                                    <span>{expense.paidBy.name} paid</span>
-                                                                )}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="expense-details">
-                                                        <div className="expense-participants">
-                                                            <div className="participant-avatars">
-                                                                {expense.participants.slice(0, 3).map(participant => (
-                                                                    <div key={participant.id} className="participant-avatar">
-                                                                        <img src={participant.avatar} alt={participant.name} />
-                                                                    </div>
-                                                                ))}
-                                                                {expense.participants.length > 3 && (
-                                                                    <div className="participant-avatar more">
-                                                                        +{expense.participants.length - 3}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <p className="participants-summary">
-                                                                Split {expense.isSettlement ? 'between' : 'equally between'} {expense.participants.length} {expense.participants.length === 1 ? 'person' : 'people'}
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="expense-balance">
-                                                            {expense.paidBy.id === VIEWER_ID ? (
-                                                                <div className="balance-item positive">
-                                                                    <ArrowDownLeft size={14} />
-                                                                    <span>You get back {formatCurrency(expense.amount - (expense.amount / expense.participants.length))}</span>
-                                                                </div>
-                                                            ) : expense.participants.some(p => p.id === VIEWER_ID) ? (
-                                                                <div className="balance-item negative">
-                                                                    <ArrowUpRight size={14} />
-                                                                    <span>You owe {formatCurrency(expense.amount / expense.participants.length)}</span>
-                                                                </div>
-                                                            ) : null}
-                                                        </div>
-                                                    </div>
-
-                                                    <AnimatePresence>
-                                                        {hoveredExpense === expense.id && (
-                                                            <motion.div
-                                                                className="expense-actions"
-                                                                initial={{ opacity: 0, y: 10 }}
-                                                                animate={{ opacity: 1, y: 0 }}
-                                                                exit={{ opacity: 0, y: 10 }}
-                                                                transition={{ duration: 0.2 }}
-                                                            >
-                                                                <motion.button
-                                                                    className="expense-action-btn"
-                                                                    whileHover={{ scale: 1.1 }}
-                                                                    whileTap={{ scale: 0.9 }}
-                                                                    title="Edit expense"
-                                                                >
-                                                                    <Edit2 size={14} />
-                                                                </motion.button>
-                                                                <motion.button
-                                                                    className="expense-action-btn"
-                                                                    whileHover={{ scale: 1.1 }}
-                                                                    whileTap={{ scale: 0.9 }}
-                                                                    title="Delete expense"
-                                                                >
-                                                                    <Trash2 size={14} />
-                                                                </motion.button>
-                                                                {expense.paidBy.id !== VIEWER_ID && expense.participants.some(p => p.id === VIEWER_ID) && (
-                                                                    <motion.button
-                                                                        className="expense-action-btn primary"
-                                                                        whileHover={{ scale: 1.1 }}
-                                                                        whileTap={{ scale: 0.9 }}
-                                                                        title="Settle this expense"
-                                                                    >
-                                                                        <RefreshCw size={14} />
-                                                                    </motion.button>
-                                                                )}
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </motion.div>
-                                ) : (
-                                    <motion.div
-                                        className="empty-state"
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                    >
-                                        <div className="empty-illustration" aria-hidden="true">💸</div>
-                                        <h3>No expenses yet</h3>
-                                        <p>Add your first expense to get started</p>
-                                        <motion.button
-                                            className="action-btn primary"
-                                            onClick={toggleQuickAdd}
-                                            whileHover={{ y: -3, boxShadow: "0 6px 20px rgba(105, 162, 151, 0.4)" }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            <PlusCircle size={18} />
-                                            Add an Expense
-                                        </motion.button>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                        <ExpensesTab
+                            group={group}
+                            filteredExpenses={filteredExpenses}
+                            formatCurrency={formatCurrency}
+                            hoveredExpense={hoveredExpense}
+                            setHoveredExpense={setHoveredExpense}
+                            toggleQuickAdd={toggleQuickAdd}
+                            containerVariants={containerVariants}
+                            cardVariants={cardVariants}
+                        />
                     )}
 
-                    {/* Balances Tab */}
                     {activeTab === 'balances' && (
                         <BalancesTab
                             balances={balances}
