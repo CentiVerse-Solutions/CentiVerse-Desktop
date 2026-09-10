@@ -33,8 +33,8 @@ import {
     LineChart, Line, Area, AreaChart, ComposedChart,
     RadialBarChart, RadialBar, LabelList
 } from 'recharts';
-import Whiteboard from '../../components/groups/Whiteboard/Whiteboard';
 import GroupExport from '../../components/groups/GroupExport/GroupExport';
+import WhiteboardTab from '../../features/groups/components/tabs/WhiteboardTab';
 import './GroupDetails.css';
 
 // Import mock data for testing
@@ -2522,22 +2522,7 @@ const GroupDetails = () => {
                         </div>
                     )}
                     {/* Whiteboard Tab */}
-                    {activeTab === 'whiteboard' && (
-                        <div
-                            className="whiteboard-container"
-                            role="tabpanel"
-                            id="whiteboard-tab"
-                            aria-labelledby="whiteboard-tab-btn"
-                        >
-                            <Whiteboard
-                                groupId={group.id}
-                                onSave={(dataUrl, filename) => {
-                                    // In a real app, you might want to save this to your backend
-                                    console.log('Whiteboard saved:', filename);
-                                }}
-                            />
-                        </div>
-                    )}
+                    {activeTab === 'whiteboard' && <WhiteboardTab groupId={group.id} />}
                 </div>
 
                 {/* Enhanced Quick Add Expense Modal with modern styling and animations */}
