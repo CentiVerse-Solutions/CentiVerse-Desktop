@@ -3,6 +3,7 @@ import {
   CurrencyCodeSchema,
   IsoDateTimeSchema,
   MoneySchema,
+  PageSchema,
   PositiveMoneySchema,
   UuidSchema,
 } from './common';
@@ -139,3 +140,45 @@ export const SettlementSchema = z
 export type SettlementDto = z.infer<typeof SettlementSchema>;
 
 export const CurrencySchema = CurrencyCodeSchema;
+
+/**
+ * §6.3: "Every update sends the entity's `version`; a mismatch returns 409 with
+ * the current server state." `version` is therefore required, not optional —
+ * an update that does not say what it is editing cannot be safe.
+ *
+ * Everything else is optional, but the server recomputes the shares on every
+ * edit regardless, so a partial update can never leave shares that disagree
+ * with the strategy stored next to them.
+ */
+export const UpdateExpenseInputSchema = z.object({
+  version: z.number().int().nonnegative(),
+  description: z.string().min(1).max(200).optional(),
+  total: PositiveMoneySchema.optional(),
+  date: IsoDateTimeSchema.optional(),
+  categoryId: UuidSchema.nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  payers: z.array(PayerSchema).min(1).optional(),
+  splitStrategy: SplitStrategySchema.optional(),
+});
+export type UpdateExpenseInput = z.infer<typeof UpdateExpenseInputSchema>;
+
+export const ExpensePageSchema = PageSchema(ExpenseSchema);
+export type ExpensePageDto = z.infer<typeof ExpensePageSchema>;
+
+export const CreateSettlementInputSchema = z
+  .object({
+    id: UuidSchema,
+    groupId: UuidSchema,
+    fromUserId: UuidSchema,
+    toUserId: UuidSchema,
+    amount: PositiveMoneySchema,
+    method: z.enum(['UPI', 'CASH', 'BANK', 'OTHER']).default('OTHER'),
+    externalRef: z.string().max(200).nullable().optional(),
+    note: z.string().max(500).nullable().optional(),
+    settledAt: IsoDateTimeSchema,
+  })
+  .refine((s) => s.fromUserId !== s.toUserId, {
+    message: 'a settlement needs two different people',
+    path: ['toUserId'],
+  });
+export type CreateSettlementInput = z.infer<typeof CreateSettlementInputSchema>;

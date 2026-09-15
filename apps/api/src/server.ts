@@ -8,6 +8,7 @@ import { getDb } from './db/prisma';
 import { installProblemHandler } from './lib/errorHandler';
 import { registerAuthPlugin } from './plugins/auth';
 import { authRoutes } from './routes/auth';
+import { expenseRoutes } from './routes/expenses';
 import { groupRoutes } from './routes/groups';
 import { healthRoutes } from './routes/health';
 
@@ -60,6 +61,7 @@ export const buildServer = async (env: Env): Promise<FastifyInstance> => {
   const db = getDb(env.DATABASE_URL);
   await app.register(authRoutes(db, env), { prefix: '/v1' });
   await app.register(groupRoutes(db), { prefix: '/v1' });
+  await app.register(expenseRoutes(db), { prefix: '/v1' });
 
   return app;
 };

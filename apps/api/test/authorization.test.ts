@@ -54,6 +54,8 @@ const GROUP_SCOPED: Case[] = [
   { method: 'DELETE', path: (id) => `/v1/groups/${id}/members/${SOME_USER_ID}` },
   { method: 'GET', path: (id) => `/v1/groups/${id}/balances` },
   { method: 'GET', path: (id) => `/v1/groups/${id}/settle-plan` },
+  { method: 'GET', path: (id) => `/v1/groups/${id}/expenses` },
+  { method: 'GET', path: (id) => `/v1/groups/${id}/settlements` },
 ];
 
 beforeAll(async () => {
@@ -252,5 +254,115 @@ describe('role checks are 403, because the caller already knows the group exists
       headers: authHeaders(owner),
     });
     expect(after.statusCode).toBe(404);
+  });
+});
+
+/**
+ * The ledger routes are addressed by their own id rather than by group, so the
+ * membership check runs after the row is loaded. That ordering is easy to get
+ * wrong, and getting it wrong is textbook IDOR — hence a test per verb.
+ */
+describe('§6.5 — an outsider cannot reach an expense by its id', () => {
+  let expenseId: string;
+  let settlementId: string;
+
+  beforeAll(async () => {
+    const created = await app.inject({
+      method: 'POST',
+      url: '/v1/expenses',
+      headers: authHeaders(owner),
+      payload: {
+        id: uuidv7(),
+        groupId,
+        description: 'Private dinner',
+        total: { minor: 10_000, currency: 'INR' },
+        date: new Date().toISOString(),
+        payers: [{ userId: owner.id, amount: { minor: 10_000, currency: 'INR' } }],
+        splitStrategy: { kind: 'EQUAL', participants: [owner.id, member.id] },
+      },
+    });
+    expenseId = created.json().id;
+
+    const settled = await app.inject({
+      method: 'POST',
+      url: '/v1/settlements',
+      headers: authHeaders(member),
+      payload: {
+        id: uuidv7(),
+        groupId,
+        fromUserId: member.id,
+        toUserId: owner.id,
+        amount: { minor: 5_000, currency: 'INR' },
+        settledAt: new Date().toISOString(),
+      },
+    });
+    settlementId = settled.json().id;
+  });
+
+  it('cannot read it', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/expenses/${expenseId}`,
+      headers: authHeaders(outsider),
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('cannot edit it', async () => {
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/v1/expenses/${expenseId}`,
+      headers: authHeaders(outsider),
+      payload: { version: 1, description: 'Edited by an outsider' },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('cannot delete it', async () => {
+    const res = await app.inject({
+      method: 'DELETE',
+      url: `/v1/expenses/${expenseId}`,
+      headers: authHeaders(outsider),
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('cannot read its history', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: `/v1/expenses/${expenseId}/revisions`,
+      headers: authHeaders(outsider),
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('cannot confirm or delete a settlement', async () => {
+    const confirm = await app.inject({
+      method: 'PATCH',
+      url: `/v1/settlements/${settlementId}/confirm`,
+      headers: authHeaders(outsider),
+    });
+    expect(confirm.statusCode).toBe(404);
+
+    const removed = await app.inject({
+      method: 'DELETE',
+      url: `/v1/settlements/${settlementId}`,
+      headers: authHeaders(outsider),
+    });
+    expect(removed.statusCode).toBe(404);
+  });
+
+  it('gets the same answer for an id that does not exist', async () => {
+    const real = await app.inject({
+      method: 'GET',
+      url: `/v1/expenses/${expenseId}`,
+      headers: authHeaders(outsider),
+    });
+    const imaginary = await app.inject({
+      method: 'GET',
+      url: `/v1/expenses/${uuidv7()}`,
+      headers: authHeaders(outsider),
+    });
+    expect({ ...real.json(), instance: null }).toEqual({ ...imaginary.json(), instance: null });
   });
 });
