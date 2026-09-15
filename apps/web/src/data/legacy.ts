@@ -43,6 +43,13 @@ export const toLegacyFriend = (f: Friend): LegacyFriend => ({
 export const toLegacyFriends = (list: Friend[] = []): LegacyFriend[] => list.map(toLegacyFriend);
 
 /** Group balance rows in the `{ id, name, balance }` shape the tabs expect. */
+export interface LegacyBalanceRow {
+  id: number;
+  name: string;
+  avatar?: string | undefined;
+  balance: number;
+}
+
 export const toLegacyBalances = (b: GroupBalances | undefined) =>
   (b?.net ?? []).map((row) => ({
     id: row.person.id,

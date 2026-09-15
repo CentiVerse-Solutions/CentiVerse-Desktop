@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 /**
  * §5.3 -- the provider stack. Server state lives in TanStack Query; Context is
@@ -16,7 +16,7 @@ export const makeQueryClient = () =>
     },
   });
 
-const QueryProvider = ({ children }) => {
+const QueryProvider = ({ children }: { children: ReactNode }) => {
   const [client] = useState(makeQueryClient);
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 };
