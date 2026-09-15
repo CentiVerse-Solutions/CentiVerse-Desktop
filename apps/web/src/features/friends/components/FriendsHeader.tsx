@@ -1,15 +1,24 @@
+import type { LegacyFriend } from '../../../data/legacy';
+import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { ArrowDownUp, DollarSign, Users } from 'lucide-react';
 
 /**
  * 7.4 -- extracted from Friends verbatim (behaviour-preserving).
  */
+interface FriendsHeaderProps {
+    cardVariants: Variants;
+    containerVariants: Variants;
+    friends: LegacyFriend[];
+    staggerDelay: number;
+}
+
 const FriendsHeader = ({
     cardVariants,
     containerVariants,
     friends,
     staggerDelay,
-}) => (
+}: FriendsHeaderProps) => (
     <div className="fr-header">
         <motion.h1
             initial={{ y: -50, opacity: 0 }}

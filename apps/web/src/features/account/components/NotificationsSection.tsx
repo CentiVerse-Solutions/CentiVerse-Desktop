@@ -1,3 +1,4 @@
+import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { Card } from '../../../components/common/Card/Card';
 
@@ -5,6 +6,15 @@ import { Card } from '../../../components/common/Card/Card';
  * 7.4 -- one component per Account section, extracted verbatim.
  * Behaviour-preserving: identical markup and animation variants.
  */
+interface NotificationsSectionProps {
+    activeSection: string;
+    handleNotificationChange: (...args: unknown[]) => void;
+    isEditing: boolean;
+    notifications: Record<string, boolean>;
+    profileData: Record<string, never>;
+    sectionVariants: Variants;
+}
+
 const NotificationsSection = ({
     activeSection,
     handleNotificationChange,
@@ -12,7 +22,7 @@ const NotificationsSection = ({
     notifications,
     profileData,
     sectionVariants,
-}) => (
+}: NotificationsSectionProps) => (
     <motion.div
         key="notifications"
         initial="initial"

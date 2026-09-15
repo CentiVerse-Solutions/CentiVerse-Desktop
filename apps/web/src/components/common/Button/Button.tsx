@@ -1,21 +1,29 @@
 import React from 'react';
 import { cn } from '../../../lib/utils';
 
-const Button = React.forwardRef(({
+type ButtonVariant = 'default' | 'outline' | 'ghost' | 'link';
+type ButtonSize = 'default' | 'sm' | 'lg' | 'icon';
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
     className,
     variant = "default",
     size = "default",
     children,
     ...props
 }, ref) => {
-    const variants = {
+    const variants: Record<ButtonVariant, string> = {
         default: "bg-teal-600 text-white hover:bg-teal-700",
         outline: "border border-gray-300 bg-transparent hover:bg-gray-50 text-gray-800",
         ghost: "bg-transparent hover:bg-gray-100 text-gray-800",
         link: "bg-transparent underline-offset-4 hover:underline text-teal-600 hover:bg-transparent"
     };
 
-    const sizes = {
+    const sizes: Record<ButtonSize, string> = {
         default: "h-10 px-4 py-2",
         sm: "h-8 px-3 text-sm",
         lg: "h-12 px-6",

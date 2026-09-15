@@ -1,3 +1,6 @@
+import type { ExpenseFormState } from '../types';
+import type { Group } from '../../../data/port';
+import type { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ExpenseFormBasics from './ExpenseFormBasics';
 import ExpenseParticipants from './ExpenseParticipants';
@@ -10,6 +13,18 @@ import { VIEWER_ID } from '../../../shared/people/viewer';
  * renderSplitDetails still arrives as a prop; it becomes the real
  * ExpenseSplitEditor later in this phase.
  */
+interface QuickAddExpenseProps {
+    group: Group;
+    expenseForm: ExpenseFormState;
+    formErrors: Record<string, string>;
+    handleExpenseFormChange: (...args: unknown[]) => void;
+    handleAmountChange: (...args: unknown[]) => void;
+    handleParticipantChange: (...args: unknown[]) => void;
+    handleSaveExpense: (...args: unknown[]) => void;
+    toggleQuickAdd: (...args: unknown[]) => void;
+    splitEditor: ReactNode;
+}
+
 const QuickAddExpense = ({
     group,
     expenseForm,
@@ -20,7 +35,7 @@ const QuickAddExpense = ({
     handleSaveExpense,
     toggleQuickAdd,
     splitEditor,
-}) => (
+}: QuickAddExpenseProps) => (
     <motion.div
         className="modal-overlay glass-effect"
         initial={{ opacity: 0 }}

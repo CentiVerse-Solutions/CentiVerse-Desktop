@@ -1,13 +1,19 @@
+import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 /**
  * 7.4 -- split out of SideNavbar verbatim (behaviour-preserving).
  */
+interface SideNavLinksProps {
+    currentPath: unknown;
+    itemVariants: Variants;
+}
+
 const SideNavLinks = ({
     currentPath,
     itemVariants,
-}) => (
+}: SideNavLinksProps) => (
     <motion.div className="side-nav-main-links" variants={itemVariants}>
         {[
             { path: "/dashboard", icon: "🏠", label: "Dashboard" },

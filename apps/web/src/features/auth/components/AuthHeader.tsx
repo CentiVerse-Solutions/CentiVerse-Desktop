@@ -1,9 +1,13 @@
 /**
  * 7.4 -- split out of AuthModal verbatim (behaviour-preserving).
  */
+interface AuthHeaderProps {
+    mode: string;
+}
+
 const AuthHeader = ({
     mode,
-}) => (
+}: AuthHeaderProps) => (
     <div className="modern-auth-header">
         <div className="logo-container">
             <div className="logo-circle">

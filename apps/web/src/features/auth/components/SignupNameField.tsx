@@ -1,11 +1,17 @@
 /**
  * 7.4 -- split out of AuthModal verbatim (behaviour-preserving).
  */
+interface SignupNameFieldProps {
+    errors: Record<string, string>;
+    formData: Record<string, never>;
+    handleChange: (...args: unknown[]) => void;
+}
+
 const SignupNameField = ({
     errors,
     formData,
     handleChange,
-}) => (
+}: SignupNameFieldProps) => (
     <div className="modern-form-group">
         <label htmlFor="name">Full Name</label>
         <div className="modern-input-container">

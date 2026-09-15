@@ -1,3 +1,6 @@
+import type { Group } from '../../../../data/port';
+import type { LegacyExpense } from '../../../../data/legacy';
+import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { Calendar, DollarSign, PlusCircle, Share2, Trash2, User } from 'lucide-react';
 import { VIEWER_ID } from '../../../../shared/people/viewer';
@@ -7,6 +10,16 @@ import { VIEWER_ID } from '../../../../shared/people/viewer';
  * markup, ARIA wiring and animation variants; only the state it reads now
  * arrives as props.
  */
+interface MembersTabProps {
+    group: Group;
+    expenses: LegacyExpense[];
+    formatCurrency: (amount: number) => string;
+    handleSettleUp: (...args: unknown[]) => void;
+    handleRemoveMember: (...args: unknown[]) => void;
+    containerVariants: Variants;
+    cardVariants: Variants;
+}
+
 const MembersTab = ({
     group,
     expenses,
@@ -15,7 +28,7 @@ const MembersTab = ({
     handleRemoveMember,
     containerVariants,
     cardVariants,
-}) => (
+}: MembersTabProps) => (
     <div
                             className="members-container"
                             role="tabpanel"

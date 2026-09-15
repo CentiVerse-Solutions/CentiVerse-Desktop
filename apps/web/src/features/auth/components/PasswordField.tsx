@@ -1,13 +1,21 @@
 /**
  * 7.4 -- split out of AuthModal verbatim (behaviour-preserving).
  */
+interface PasswordFieldProps {
+    errors: Record<string, string>;
+    formData: Record<string, never>;
+    handleChange: (...args: unknown[]) => void;
+    showPassword: boolean;
+    togglePasswordVisibility: (...args: unknown[]) => void;
+}
+
 const PasswordField = ({
     errors,
     formData,
     handleChange,
     showPassword,
     togglePasswordVisibility,
-}) => (
+}: PasswordFieldProps) => (
     <div className="modern-form-group">
         <label htmlFor="password">Password</label>
         <div className="modern-input-container">

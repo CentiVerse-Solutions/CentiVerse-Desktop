@@ -1,3 +1,6 @@
+import type { Group } from '../../../data/port';
+import type { LegacyExpense } from '../../../data/legacy';
+import type { Variants } from 'framer-motion';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDownLeft, ArrowUpRight, Edit2, PlusCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { VIEWER_ID } from '../../../shared/people/viewer';
@@ -7,6 +10,17 @@ import { VIEWER_ID } from '../../../shared/people/viewer';
  * identical markup, ARIA wiring and animation variants; the state it reads
  * now arrives as props.
  */
+interface ExpensesTabProps {
+    group: Group;
+    filteredExpenses: LegacyExpense[];
+    formatCurrency: (amount: number) => string;
+    hoveredExpense: number | null;
+    setHoveredExpense: (value: unknown) => void;
+    toggleQuickAdd: (...args: unknown[]) => void;
+    containerVariants: Variants;
+    cardVariants: Variants;
+}
+
 const ExpensesTab = ({
     group,
     filteredExpenses,
@@ -16,7 +30,7 @@ const ExpensesTab = ({
     toggleQuickAdd,
     containerVariants,
     cardVariants,
-}) => (
+}: ExpensesTabProps) => (
     <div
                             className="expenses-list"
                             role="tabpanel"

@@ -1,8 +1,21 @@
+import type { Group } from '../../../data/port';
+import type { LegacyExpense } from '../../../data/legacy';
 import { motion } from 'framer-motion';
 
 /**
  * 7.4 -- extracted from GroupDetails verbatim (behaviour-preserving).
  */
+interface ExpenseFiltersProps {
+    group: Group;
+    expenses: LegacyExpense[];
+    expenseFilter: string;
+    setExpenseFilter: (value: unknown) => void;
+    timePeriod: string;
+    setTimePeriod: (value: unknown) => void;
+    sortBy: string;
+    setSortBy: (value: unknown) => void;
+}
+
 const ExpenseFilters = ({
     group,
     expenses,
@@ -12,7 +25,7 @@ const ExpenseFilters = ({
     setTimePeriod,
     sortBy,
     setSortBy,
-}) => (
+}: ExpenseFiltersProps) => (
     <motion.div
                         className="filter-controls"
                         initial={{ opacity: 0, y: -10 }}

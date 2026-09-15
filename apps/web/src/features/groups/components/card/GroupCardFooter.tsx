@@ -1,12 +1,18 @@
+import type { Group } from '../../../../data/port';
 import { motion } from 'framer-motion';
 
 /**
  * 7.4 -- split out verbatim (behaviour-preserving).
  */
+interface GroupCardFooterProps {
+    group: Group;
+    isHovered: boolean;
+}
+
 const GroupCardFooter = ({
     group,
     isHovered,
-}) => (
+}: GroupCardFooterProps) => (
     <motion.div
         className="group-card-footer"
         initial={{ opacity: 0 }}

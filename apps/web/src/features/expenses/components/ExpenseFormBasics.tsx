@@ -1,3 +1,5 @@
+import type { ExpenseFormState } from '../types';
+import type { Group } from '../../../data/port';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { VIEWER_ID } from '../../../shared/people/viewer';
@@ -6,13 +8,21 @@ import { VIEWER_ID } from '../../../shared/people/viewer';
  * 7.4 -- split out of QuickAddExpense verbatim to bring it under the
  * 300-line limit. Behaviour-preserving.
  */
+interface ExpenseFormBasicsProps {
+    group: Group;
+    expenseForm: ExpenseFormState;
+    formErrors: Record<string, string>;
+    handleExpenseFormChange: (...args: unknown[]) => void;
+    handleAmountChange: (...args: unknown[]) => void;
+}
+
 const ExpenseFormBasics = ({
     group,
     expenseForm,
     formErrors,
     handleExpenseFormChange,
     handleAmountChange,
-}) => (
+}: ExpenseFormBasicsProps) => (
     <>
     <motion.div
         className={`form-group modern-input ${formErrors.description ? 'has-error' : ''}`}

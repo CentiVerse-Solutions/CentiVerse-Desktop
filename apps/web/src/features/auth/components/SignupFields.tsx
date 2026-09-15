@@ -1,13 +1,21 @@
 /**
  * 7.4 -- split out of AuthModal verbatim (behaviour-preserving).
  */
+interface SignupFieldsProps {
+    errors: Record<string, string>;
+    formData: Record<string, never>;
+    handleChange: (...args: unknown[]) => void;
+    showConfirmPassword: boolean;
+    togglePasswordVisibility: (...args: unknown[]) => void;
+}
+
 const SignupFields = ({
     errors,
     formData,
     handleChange,
     showConfirmPassword,
     togglePasswordVisibility,
-}) => (
+}: SignupFieldsProps) => (
     <>
         <div className="modern-form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>

@@ -1,16 +1,26 @@
+import type { ExpenseFormState } from '../types';
+import type { Group } from '../../../data/port';
 import { motion } from 'framer-motion';
 
 /**
  * 7.4 -- split out of QuickAddExpense verbatim to bring it under the
  * 300-line limit. Behaviour-preserving.
  */
+interface ExpenseParticipantsProps {
+    group: Group;
+    expenseForm: ExpenseFormState;
+    formErrors: Record<string, string>;
+    handleParticipantChange: (...args: unknown[]) => void;
+    handleExpenseFormChange: (...args: unknown[]) => void;
+}
+
 const ExpenseParticipants = ({
     group,
     expenseForm,
     formErrors,
     handleParticipantChange,
     handleExpenseFormChange,
-}) => (
+}: ExpenseParticipantsProps) => (
     <>
     <motion.div
         className="form-group modern-input"

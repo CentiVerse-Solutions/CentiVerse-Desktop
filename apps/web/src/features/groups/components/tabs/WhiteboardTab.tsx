@@ -4,7 +4,11 @@ import Whiteboard from '../../../../components/groups/Whiteboard/Whiteboard';
  * §7.4 — extracted from GroupDetails verbatim. Behaviour-preserving: same
  * markup, same ARIA wiring, same props.
  */
-const WhiteboardTab = ({ groupId }) => (
+interface WhiteboardTabProps {
+    groupId: number;
+}
+
+const WhiteboardTab = ({ groupId }: WhiteboardTabProps) => (
     <div
         className="whiteboard-container"
         role="tabpanel"

@@ -4,10 +4,15 @@ import { Users, X } from 'lucide-react';
 /**
  * 7.4 -- split out of NewGroupModal verbatim (behaviour-preserving).
  */
+interface NewGroupHeaderProps {
+    onClose: (...args: unknown[]) => void;
+    step: number;
+}
+
 const NewGroupHeader = ({
     onClose,
     step,
-}) => (
+}: NewGroupHeaderProps) => (
     <div className="modal-header">
         <h2 id="new-group-title" className="modal-title">
             <Users className="modal-title-icon" size={20} />

@@ -1,3 +1,4 @@
+import type { Variants } from 'framer-motion';
 import { motion } from 'framer-motion';
 import { Card } from '../../../components/common/Card/Card';
 import { SUPPORTED_CURRENCIES as mockCurrencies } from '../../../shared/currencies';
@@ -6,6 +7,16 @@ import { SUPPORTED_CURRENCIES as mockCurrencies } from '../../../shared/currenci
  * 7.4 -- one component per Account section, extracted verbatim.
  * Behaviour-preserving: identical markup and animation variants.
  */
+interface PreferencesSectionProps {
+    activeSection: string;
+    handleInputChange: (...args: unknown[]) => void;
+    handleToggleDarkMode: (...args: unknown[]) => void;
+    isEditing: boolean;
+    itemVariants: Variants;
+    profileData: Record<string, never>;
+    sectionVariants: Variants;
+}
+
 const PreferencesSection = ({
     activeSection,
     handleInputChange,
@@ -14,7 +25,7 @@ const PreferencesSection = ({
     itemVariants,
     profileData,
     sectionVariants,
-}) => (
+}: PreferencesSectionProps) => (
     <motion.div
         key="preferences"
         initial="initial"

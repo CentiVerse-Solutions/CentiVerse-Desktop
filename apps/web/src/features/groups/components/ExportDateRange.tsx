@@ -1,8 +1,20 @@
+import type { Group } from '../../../data/port';
 import { Calendar } from 'lucide-react';
 
 /**
  * 7.4 -- the export date-range picker, split out of GroupExport verbatim.
  */
+interface ExportDateRangeProps {
+    today: string;
+    dateRange: string;
+    setDateRange: (value: unknown) => void;
+    customDateStart: string;
+    setCustomDateStart: (value: unknown) => void;
+    customDateEnd: string;
+    setCustomDateEnd: (value: unknown) => void;
+    group: Group;
+}
+
 const ExportDateRange = ({
     today,
     dateRange,
@@ -12,7 +24,7 @@ const ExportDateRange = ({
     customDateEnd,
     setCustomDateEnd,
     group,
-}) => (
+}: ExportDateRangeProps) => (
     <div className="export-section">
         <h3 className="section-title">
             <Calendar size={18} className="section-icon" />

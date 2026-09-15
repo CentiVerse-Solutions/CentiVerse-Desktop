@@ -1,8 +1,14 @@
 import React from 'react';
 import { cn } from '../../../lib/utils';
 
-const Badge = ({ className, variant = "default", children, ...props }) => {
-    const variantClassMap = {
+type BadgeVariant = 'default' | 'secondary' | 'success' | 'warning' | 'danger';
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+    variant?: BadgeVariant;
+}
+
+const Badge = ({ className, variant = "default", children, ...props }: BadgeProps) => {
+    const variantClassMap: Record<BadgeVariant, string> = {
         default: "bg-teal-100 text-teal-800 hover:bg-teal-200",
         secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200",
         success: "bg-green-100 text-green-800 hover:bg-green-200",

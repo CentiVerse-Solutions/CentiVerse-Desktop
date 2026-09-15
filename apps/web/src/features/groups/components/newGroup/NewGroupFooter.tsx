@@ -3,12 +3,19 @@ import { motion } from 'framer-motion';
 /**
  * 7.4 -- split out of NewGroupModal verbatim (behaviour-preserving).
  */
+interface NewGroupFooterProps {
+    handleNextStep: (...args: unknown[]) => void;
+    handlePrevStep: (...args: unknown[]) => void;
+    onClose: (...args: unknown[]) => void;
+    step: number;
+}
+
 const NewGroupFooter = ({
     handleNextStep,
     handlePrevStep,
     onClose,
     step,
-}) => (
+}: NewGroupFooterProps) => (
     <div className="modal-footer">
         {step === 1 ? (
             <div className="footer-buttons">
