@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import './SideNavbar.css';
+import SideNavGroups from '../../../features/navigation/components/SideNavGroups';
+import SideNavLinks from '../../../features/navigation/components/SideNavLinks';
+import SideNavProfile from '../../../features/navigation/components/SideNavProfile';
 import { useViewerQuery } from '../../../data/hooks';
 
 const SideNavbar = ({ isOpen, toggleSideNav, groups = [] }) => {
@@ -209,151 +212,27 @@ const SideNavbar = ({ isOpen, toggleSideNav, groups = [] }) => {
                 </motion.div>
 
                 {/* Pinned Groups Section */}
-                {displayPinnedGroups.length > 0 && (
-                    <div className="side-nav-section">
-                        <motion.h3
-                            className="section-title"
-                            variants={itemVariants}
-                        >
-                            Pinned Groups
-                        </motion.h3>
-                        <div className="side-nav-groups">
-                            {displayPinnedGroups.map((group) => (
-                                <motion.div key={group.id || `pinned-${group.name}`} variants={itemVariants}>
-                                    <Link
-                                        to={`/groups/${group.id}`}
-                                        className={`nav-group-item ${currentPath === `/groups/${group.id}` ? 'active' : ''}`}
-                                        aria-current={currentPath === `/groups/${group.id}` ? 'page' : undefined}
-                                    >
-                                        <div className="nav-group-avatar">
-                                            {group.avatar && (
-                                                <img
-                                                    src={group.avatar}
-                                                    alt=""
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="nav-group-info">
-                                            <span className="nav-group-name">{group.name}</span>
-                                            {group.unreadCount > 0 && (
-                                                <span className="unread-badge">{group.unreadCount}</span>
-                                            )}
-                                        </div>
-                                        <motion.button
-                                            type="button"
-                                            className="group-options-btn"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={(e) => handleGroupOptions(e, group)}
-                                            aria-label={`Options for ${group.name}`}
-                                        >
-                                            ⋮
-                                        </motion.button>
-                                    </Link>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Regular Groups Section */}
-                <div className="side-nav-section">
-                    <motion.h3
-                        className="section-title"
-                        variants={itemVariants}
-                    >
-                        Your Groups
-                    </motion.h3>
-                    <div className="side-nav-groups">
-                        {displayRegularGroups.length > 0 ? (
-                            displayRegularGroups.map((group) => (
-                                <motion.div key={group.id || `group-${group.name}`} variants={itemVariants}>
-                                    <Link
-                                        to={`/groups/${group.id}`}
-                                        className={`nav-group-item ${currentPath === `/groups/${group.id}` ? 'active' : ''}`}
-                                        aria-current={currentPath === `/groups/${group.id}` ? 'page' : undefined}
-                                    >
-                                        <div className="nav-group-avatar">
-                                            {group.avatar && (
-                                                <img
-                                                    src={group.avatar}
-                                                    alt=""
-                                                    aria-hidden="true"
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="nav-group-info">
-                                            <span className="nav-group-name">{group.name}</span>
-                                            {group.unreadCount > 0 && (
-                                                <span className="unread-badge">{group.unreadCount}</span>
-                                            )}
-                                        </div>
-                                        <motion.button
-                                            type="button"
-                                            className="group-options-btn"
-                                            whileHover={{ scale: 1.1 }}
-                                            whileTap={{ scale: 0.9 }}
-                                            onClick={(e) => handleGroupOptions(e, group)}
-                                            aria-label={`Options for ${group.name}`}
-                                        >
-                                            ⋮
-                                        </motion.button>
-                                    </Link>
-                                </motion.div>
-                            ))
-                        ) : (
-                            <motion.div
-                                className="empty-groups-message"
-                                variants={itemVariants}
-                            >
-                                <p>No groups found</p>
-                                <button
-                                    type="button"
-                                    className="create-first-group-btn"
-                                    onClick={handleCreateGroup}
-                                >
-                                    Create your first group
-                                </button>
-                            </motion.div>
-                        )}
-                    </div>
-                </div>
+                <SideNavGroups
+                    currentPath={currentPath}
+                    displayPinnedGroups={displayPinnedGroups}
+                    displayRegularGroups={displayRegularGroups}
+                    groups={groups}
+                    handleCreateGroup={handleCreateGroup}
+                    handleGroupOptions={handleGroupOptions}
+                    itemVariants={itemVariants}
+                />
 
                 {/* Main Navigation Links */}
-                <motion.div className="side-nav-main-links" variants={itemVariants}>
-                    {[
-                        { path: "/dashboard", icon: "🏠", label: "Dashboard" },
-                        { path: "/activity", icon: "📊", label: "Activity" },
-                        { path: "/friends", icon: "👥", label: "Friends" },
-                    ].map((item) => (
-                        <motion.div key={item.path} variants={itemVariants}>
-                            <Link
-                                to={item.path}
-                                className={`nav-main-item ${currentPath === item.path ? 'active' : ''}`}
-                                aria-current={currentPath === item.path ? 'page' : undefined}
-                            >
-                                <div className="nav-icon">
-                                    {item.icon}
-                                </div>
-                                <span>{item.label}</span>
-                            </Link>
-                        </motion.div>
-                    ))}
-                </motion.div>
+                <SideNavLinks
+                    currentPath={currentPath}
+                    itemVariants={itemVariants}
+                />
 
                 {/* User Profile Section */}
-                <motion.div className="user-profile-section" variants={itemVariants}>
-                    <Link to="/account" className="user-profile-link">
-                        <div className="user-avatar">
-                            <img src={viewer?.avatar} alt="Your profile" />
-                        </div>
-                        <div className="user-info">
-                            <span className="user-name">{viewer?.name ?? '—'}</span>
-                            <span className="user-email">{viewer?.email ?? ''}</span>
-                        </div>
-                    </Link>
-                </motion.div>
+                <SideNavProfile
+                    viewer={viewer}
+                    itemVariants={itemVariants}
+                />
             </motion.nav>
         </>
     );
