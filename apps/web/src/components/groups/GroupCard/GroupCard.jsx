@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, DollarSign, Clock, MoreHorizontal, ArrowUpRight, ArrowDownLeft, CheckCircle, Calendar, Share2, Eye } from 'lucide-react';
+import GroupCardBody from '../../../features/groups/components/card/GroupCardBody';
+import GroupCardFooter from '../../../features/groups/components/card/GroupCardFooter';
 import './GroupCard.css';
 import { formatAmount } from '../../../shared/money/format';
 
@@ -214,143 +216,21 @@ const GroupCard = ({ group, expenses = [], currentUserId }) => {
                     </AnimatePresence>
                 </div>
 
-                <div className="group-card-body">
-                    <div className="group-card-stats">
-                        <div className="group-card-stat">
-                            <div className="stat-label">
-                                <DollarSign size={14} />
-                                <span>Total Spending</span>
-                            </div>
-                            <motion.div
-                                className="stat-value"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.1 }}
-                            >
-                                {formatCurrency(totalSpent)}
-                            </motion.div>
-                        </div>
+                <GroupCardBody
+                    userBalance={userBalance}
+                    activityStatus={activityStatus}
+                    balanceVariants={balanceVariants}
+                    formatCurrency={formatCurrency}
+                    formatDate={formatDate}
+                    group={group}
+                    lastActivity={lastActivity}
+                    totalSpent={totalSpent}
+                />
 
-                        <div className="group-card-stat">
-                            <div className="stat-label">
-                                <Clock size={14} />
-                                <span>Recent Activity</span>
-                            </div>
-                            <motion.div
-                                className={`stat-value ${activityStatus}`}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                            >
-                                {formatDate(lastActivity?.date)}
-                            </motion.div>
-                        </div>
-                    </div>
-
-                    <motion.div
-                        className="group-card-balance"
-                        variants={balanceVariants}
-                    >
-                        {userBalance !== 0 ? (
-                            userBalance > 0 ? (
-                                <div className="balance-chip negative">
-                                    <div className="balance-icon">
-                                        <ArrowUpRight size={16} />
-                                    </div>
-                                    <div className="balance-text">
-                                        <span className="balance-label">You owe</span>
-                                        <span className="balance-amount">{formatCurrency(userBalance)}</span>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="balance-chip positive">
-                                    <div className="balance-icon">
-                                        <ArrowDownLeft size={16} />
-                                    </div>
-                                    <div className="balance-text">
-                                        <span className="balance-label">You're owed</span>
-                                        <span className="balance-amount">{formatCurrency(Math.abs(userBalance))}</span>
-                                    </div>
-                                </div>
-                            )
-                        ) : (
-                            <div className="balance-chip neutral">
-                                <div className="balance-icon">
-                                    <CheckCircle size={16} />
-                                </div>
-                                <div className="balance-text">
-                                    <span className="balance-label">All settled up</span>
-                                    <span className="balance-amount">{formatCurrency(0)}</span>
-                                </div>
-                            </div>
-                        )}
-                    </motion.div>
-                </div>
-
-                <motion.div
-                    className="group-card-footer"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                >
-                    <div className="group-member-avatars">
-                        {group.members.slice(0, 4).map((member, index) => (
-                            <motion.div
-                                key={member.id}
-                                className="group-member-avatar"
-                                style={{ zIndex: 10 - index }}
-                                initial={{ x: -5, opacity: 0 }}
-                                animate={{
-                                    x: 0,
-                                    opacity: 1,
-                                    transition: { delay: 0.1 * index }
-                                }}
-                                whileHover={{ y: -5, scale: 1.2, zIndex: 20 }}
-                            >
-                                <img src={member.avatar} alt={member.name} />
-                                <motion.span
-                                    className="member-tooltip"
-                                    initial={{ opacity: 0, y: 10 }}
-                                    whileHover={{ opacity: 1, y: 0 }}
-                                >
-                                    {member.name}
-                                </motion.span>
-                            </motion.div>
-                        ))}
-                        {group.members.length > 4 && (
-                            <motion.div
-                                className="group-member-avatar more"
-                                initial={{ x: -5, opacity: 0 }}
-                                animate={{
-                                    x: 0,
-                                    opacity: 1,
-                                    transition: { delay: 0.4 }
-                                }}
-                                whileHover={{ y: -5 }}
-                            >
-                                +{group.members.length - 4}
-                            </motion.div>
-                        )}
-                    </div>
-
-                    <motion.div
-                        className="view-group-btn"
-                        whileHover={{
-                            scale: 1.05,
-                            boxShadow: "0 8px 20px rgba(34, 197, 94, 0.3)"
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                    >
-                        <span>View Details</span>
-                        <motion.div
-                            className="btn-arrow"
-                            animate={{ x: isHovered ? 5 : 0 }}
-                            transition={{ type: "spring", stiffness: 400 }}
-                        >
-                            →
-                        </motion.div>
-                    </motion.div>
-                </motion.div>
+                <GroupCardFooter
+                    group={group}
+                    isHovered={isHovered}
+                />
             </Link>
         </motion.div>
     );
