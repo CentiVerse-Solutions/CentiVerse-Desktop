@@ -995,15 +995,15 @@ Recommendations given; override freely, but decide **before** the phase that dep
 
 | # | Decision | Options | Recommendation | Needed by |
 |---|---|---|---|---|
-| 1 | Backend approach | Own Fastify API / Supabase BaaS / Convex | **Own API** — it's the part that demonstrates SDE skill | Phase 5 |
-| 2 | ORM | Prisma / Drizzle / raw SQL | **Prisma** — migrations + readable schema | Phase 5 |
-| 3 | Auth | Roll your own / Better Auth / Clerk | **Roll your own** for the same reason as #1; Better Auth if time is short | Phase 5 |
+| 1 | Backend approach | Own Fastify API / Supabase BaaS / Convex | **Own API** — it's the part that demonstrates SDE skill | ✅ [ADR 0004](adr/0004-backend-stack.md) |
+| 2 | ORM | Prisma / Drizzle / raw SQL | **Prisma** — migrations + readable schema | ✅ [ADR 0004](adr/0004-backend-stack.md) |
+| 3 | Auth | Roll your own / Better Auth / Clerk | **Roll your own** for the same reason as #1; Better Auth if time is short | ✅ [ADR 0004](adr/0004-backend-stack.md) |
 | 4 | Multi-currency depth | Per-group single currency / per-expense with frozen FX | **Per-group single currency in v1**; the schema already has the FX columns for later | Phase 2 |
 | 5 | Monorepo | pnpm workspace / single package | **Workspace** — it's what makes the layering enforceable | Phase 1 |
-| 6 | Hosting | Railway / Fly / Render / VPS | **Railway** API + **Neon** Postgres + **Cloudflare Pages** web — generous free tiers | Phase 5 |
+| 6 | Hosting | Railway / Fly / Render / VPS | **Railway** API + **Neon** Postgres + **Cloudflare Pages** web — generous free tiers | ✅ [ADR 0004](adr/0004-backend-stack.md) |
 | 7 | Platform | ~~web / Android / RN~~ | **DECIDED — web-first.** Responsive web is the product. PWA (installable, offline, web push) in Phase 6; an optional Capacitor APK for a Play Store listing in Phase 7. No React Native, no native Android. | ✅ decided |
 | 8 | Keep MUI? | Remove / keep | **Remove** | Phase 1 (ban) / 7 (delete) |
-| 9 | Placeholder members | Real users with null email / separate entity | **Real users, `claimed_at` column** | Phase 5 |
+| 9 | Placeholder members | Real users with null email / separate entity | **Real users, `claimed_at` column** | ✅ [ADR 0004](adr/0004-backend-stack.md) |
 | 10 | Whiteboard collaboration | Server-authoritative / CRDT | **Server-authoritative**; CRDT only if simultaneous editing is genuinely wanted | Phase 6 |
 
 ---
