@@ -8,12 +8,15 @@
   },
   "scripts": {
     "dev": "pnpm --filter web dev",
+    "dev:api": "pnpm --filter @centiverse/api dev",
     "build": "pnpm --filter web build",
     "test": "pnpm -r test",
     "test:cov": "pnpm --filter @centiverse/core test:cov",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm --filter web lint",
+    "lint": "pnpm --filter web lint && pnpm --filter @centiverse/api lint",
     "tauri:dev": "pnpm --filter desktop dev",
-    "tauri:build": "pnpm --filter desktop build"
+    "tauri:build": "pnpm --filter desktop build",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
   }
 }

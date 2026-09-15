@@ -1,0 +1,23 @@
+# Local Postgres for development and the API test suite (ADR 0004).
+# `docker compose up -d` then `pnpm --filter @centiverse/api prisma migrate dev`.
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: centiverse-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: centiverse
+      POSTGRES_PASSWORD: centiverse
+      POSTGRES_DB: centiverse
+    ports:
+      - '5432:5432'
+    volumes:
+      - centiverse-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U centiverse -d centiverse']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  centiverse-pgdata:
