@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CurrencyCodeSchema, IsoDateTimeSchema, UuidSchema } from './common';
+import { CurrencyCodeSchema, IsoDateTimeSchema, MoneySchema, UuidSchema } from './common';
 
 /**
  * §5.4 — no user is ever named "You". The viewer's identity is a property of
@@ -53,3 +53,55 @@ export const CreateGroupInputSchema = z.object({
   simplifyDebts: z.boolean().default(false),
 });
 export type CreateGroupInput = z.infer<typeof CreateGroupInputSchema>;
+
+export const UpdateGroupInputSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    /** Only accepted while the group has no expenses (ADR 0002). */
+    currency: CurrencyCodeSchema,
+    simplifyDebts: z.boolean(),
+    avatarUrl: z.string().url().nullable(),
+  })
+  .partial();
+export type UpdateGroupInput = z.infer<typeof UpdateGroupInputSchema>;
+
+/**
+ * Either an existing account or a name to create a placeholder for (§12 #9).
+ * Exactly one, so "add Priya" and "add user 0193..." cannot be confused.
+ */
+export const AddMemberInputSchema = z
+  .object({
+    userId: UuidSchema.optional(),
+    displayName: z.string().min(1).max(100).optional(),
+  })
+  .refine((v) => (v.userId === undefined) !== (v.displayName === undefined), {
+    message: 'give exactly one of userId or displayName',
+  });
+export type AddMemberInput = z.infer<typeof AddMemberInputSchema>;
+
+export const GroupMemberWithUserSchema = z.object({
+  member: GroupMemberSchema,
+  user: UserSchema,
+});
+export type GroupMemberWithUserDto = z.infer<typeof GroupMemberWithUserSchema>;
+
+/** A member's single net position. Positive means they are owed (§4.4). */
+export const NetBalanceSchema = z.object({
+  userId: UuidSchema,
+  amount: MoneySchema,
+});
+export type NetBalanceDto = z.infer<typeof NetBalanceSchema>;
+
+/** One directed edge: `fromUserId` owes `toUserId`. Always positive. */
+export const PairwiseBalanceSchema = z.object({
+  fromUserId: UuidSchema,
+  toUserId: UuidSchema,
+  amount: MoneySchema,
+});
+export type PairwiseBalanceDto = z.infer<typeof PairwiseBalanceSchema>;
+
+export const GroupBalancesSchema = z.object({
+  net: z.array(NetBalanceSchema),
+  pairwise: z.array(PairwiseBalanceSchema),
+});
+export type GroupBalancesDto = z.infer<typeof GroupBalancesSchema>;
