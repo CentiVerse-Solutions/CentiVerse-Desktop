@@ -11,6 +11,12 @@ import  SplitText  from '../../components/common/SplitText/SplitText';
 
 // Import mock currencies for dropdown
 import { SUPPORTED_CURRENCIES as mockCurrencies } from '../../shared/currencies';
+import PersonalInfoSection from '../../features/account/components/PersonalInfoSection';
+import PreferencesSection from '../../features/account/components/PreferencesSection';
+import NotificationsSection from '../../features/account/components/NotificationsSection';
+import PaymentMethodsSection from '../../features/account/components/PaymentMethodsSection';
+import SecuritySection from '../../features/account/components/SecuritySection';
+import SupportSection from '../../features/account/components/SupportSection';
 
 // Use a default import approach that's safer
 const defaultAvatar = 'https://via.placeholder.com/150';
@@ -246,719 +252,73 @@ const Account = () => {
         switch (activeTab) {
             case 'personal':
                 return (
-                    <motion.div
-                        key="personal"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'personal' ? 'section-active' : ''}`}>
-                            <motion.h2
-                                className="section-title"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Personal Information
-                            </motion.h2>
-                            <motion.div className="form-grid">
-                                {[
-                                    { id: 'name', label: 'Full Name', type: 'text', value: profileData.name },
-                                    { id: 'email', label: 'Email Address', type: 'email', value: profileData.email },
-                                    { id: 'phone', label: 'Phone Number', type: 'tel', value: profileData.phone },
-                                    { id: 'upiId', label: 'UPI ID', type: 'text', value: profileData.upiId }
-                                ].map((field, index) => (
-                                    <motion.div
-                                        className="form-group"
-                                        key={field.id}
-                                        variants={itemVariants}
-                                        custom={index}
-                                        whileHover={isEditing ? { y: -4 } : {}}
-                                    >
-                                        <label htmlFor={field.id}>{field.label}</label>
-                                        <motion.input
-                                            type={field.type}
-                                            id={field.id}
-                                            name={field.id}
-                                            value={field.value}
-                                            onChange={handleInputChange}
-                                            disabled={!isEditing}
-                                            className={isEditing ? 'editable' : ''}
-                                            animate={isEditing ? {
-                                                boxShadow: ['0 2px 4px rgba(0, 0, 0, 0.05)', '0 4px 8px rgba(105, 162, 151, 0.15)', '0 2px 4px rgba(0, 0, 0, 0.05)'],
-                                            } : {}}
-                                            transition={{
-                                                duration: 2,
-                                                repeat: Infinity,
-                                                repeatType: 'reverse'
-                                            }}
-                                        />
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        </Card>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3, duration: 0.4 }}
-                        >
-                            <Card className="account-section">
-                                <motion.h2
-                                    className="section-title"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3, delay: 0.1 }}
-                                >
-                                    Account Actions
-                                </motion.h2>
-                                <div className="account-actions">
-                                    <motion.div
-                                        className="action-group"
-                                        variants={itemVariants}
-                                        custom={0}
-                                    >
-                                        <h3>Data Management</h3>
-                                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                                            <Button variant="outlined" onClick={handleExportData}>
-                                                <motion.span
-                                                    className="button-icon"
-                                                    animate={{ y: [0, -3, 0] }}
-                                                    transition={{ duration: 1.5, repeat: Infinity }}
-                                                >
-                                                    📤
-                                                </motion.span>
-                                                <span>Export my data</span>
-                                            </Button>
-                                        </motion.div>
-                                    </motion.div>
-                                    <motion.div
-                                        className="action-group"
-                                        variants={itemVariants}
-                                        custom={1}
-                                    >
-                                        <h3>Danger Zone</h3>
-                                        <motion.div
-                                            whileHover={{
-                                                scale: 1.03,
-                                                transition: { duration: 0.2 }
-                                            }}
-                                            whileTap={{ scale: 0.97 }}
-                                        >
-                                            <Button variant="danger" onClick={handleDeleteAccount}>
-                                                <motion.span
-                                                    className="button-icon"
-                                                    animate={{ rotate: [0, 10, 0, -10, 0] }}
-                                                    transition={{ duration: 2, repeat: Infinity }}
-                                                >
-                                                    🗑️
-                                                </motion.span>
-                                                <span>Delete my account</span>
-                                            </Button>
-                                        </motion.div>
-                                    </motion.div>
-                                </div>
-                            </Card>
-                        </motion.div>
-                    </motion.div>
+                    <PersonalInfoSection
+                        activeSection={activeSection}
+                        handleDeleteAccount={handleDeleteAccount}
+                        handleExportData={handleExportData}
+                        handleInputChange={handleInputChange}
+                        isEditing={isEditing}
+                        itemVariants={itemVariants}
+                        profileData={profileData}
+                        sectionVariants={sectionVariants}
+                    />
                 );
-
             case 'preferences':
                 return (
-                    <motion.div
-                        key="preferences"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'preferences' ? 'section-active' : ''}`}>
-                            <motion.h2
-                                className="section-title"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Preferences
-                            </motion.h2>
-                            <div className="form-grid">
-                                <div className="form-group">
-                                    <label htmlFor="currency">Default Currency</label>
-                                    <select
-                                        id="currency"
-                                        name="currency"
-                                        value={profileData.currency}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                        className={isEditing ? 'editable' : ''}
-                                    >
-                                        {mockCurrencies.map(currency => (
-                                            <option key={currency.code} value={currency.code}>
-                                                {currency.name} ({currency.symbol})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="language">Language</label>
-                                    <select
-                                        id="language"
-                                        name="language"
-                                        value={profileData.language}
-                                        onChange={handleInputChange}
-                                        disabled={!isEditing}
-                                        className={isEditing ? 'editable' : ''}
-                                    >
-                                        <option value="English">English</option>
-                                        <option value="Hindi">Hindi</option>
-                                        <option value="Spanish">Spanish</option>
-                                        <option value="French">French</option>
-                                        <option value="German">German</option>
-                                        <option value="Japanese">Japanese</option>
-                                        <option value="Chinese">Chinese</option>
-                                    </select>
-                                </div>
-                                <div className="form-group toggle-group">
-                                    <label htmlFor="darkMode">Dark Mode</label>
-                                    <div className="toggle-switch">
-                                        <input
-                                            type="checkbox"
-                                            id="darkMode"
-                                            checked={profileData.darkMode}
-                                            onChange={handleToggleDarkMode}
-                                            disabled={!isEditing}
-                                        />
-                                        <label htmlFor="darkMode" className="toggle-label"></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="preference-categories">
-                                <h3 className="subsection-title">Default Categories</h3>
-                                <p className="subsection-description">
-                                    Select your most used expense categories to appear at the top when adding expenses.
-                                </p>
-                                <motion.div
-                                    className="category-chips"
-                                    variants={{
-                                        animate: {
-                                            transition: {
-                                                staggerChildren: 0.1
-                                            }
-                                        }
-                                    }}
-                                >
-                                    {[
-                                        { icon: '🍔', name: 'Food & Drink', selected: true },
-                                        { icon: '🚕', name: 'Transportation', selected: true },
-                                        { icon: '🏨', name: 'Accommodation', selected: false },
-                                        { icon: '🛒', name: 'Groceries', selected: true },
-                                        { icon: '🎬', name: 'Entertainment', selected: false },
-                                        { icon: '💡', name: 'Utilities', selected: false }
-                                    ].map((category, index) => (
-                                        <motion.div
-                                            key={category.name}
-                                            className={`category-chip ${category.selected ? 'selected' : ''}`}
-                                            variants={itemVariants}
-                                            custom={index}
-                                            whileHover={{
-                                                scale: 1.05,
-                                                y: -5,
-                                                boxShadow: '0 6px 10px rgba(0, 0, 0, 0.1)'
-                                            }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            <span className="category-icon">{category.icon}</span>
-                                            <span>{category.name}</span>
-                                        </motion.div>
-                                    ))}
-                                </motion.div>
-                            </div>
-                        </Card>
-                    </motion.div>
+                    <PreferencesSection
+                        activeSection={activeSection}
+                        handleInputChange={handleInputChange}
+                        handleToggleDarkMode={handleToggleDarkMode}
+                        isEditing={isEditing}
+                        itemVariants={itemVariants}
+                        profileData={profileData}
+                        sectionVariants={sectionVariants}
+                    />
                 );
-
             case 'notifications':
                 return (
-                    <motion.div
-                        key="notifications"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'notifications' ? 'section-active' : ''}`}>
-                            <motion.h2
-                                className="section-title"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Notifications
-                            </motion.h2>
-                            <div className="notification-grid">
-                                <div className="notification-group">
-                                    <h3>Groups and Friends</h3>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When someone adds me to a group</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="groupAdd"
-                                                checked={notifications.groupAdd}
-                                                onChange={() => handleNotificationChange('groupAdd')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="groupAdd" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When someone adds me as a friend</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="friendAdd"
-                                                checked={notifications.friendAdd}
-                                                onChange={() => handleNotificationChange('friendAdd')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="friendAdd" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="notification-group">
-                                    <h3>Expenses</h3>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When an expense is added</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="expenseAdd"
-                                                checked={notifications.expenseAdd}
-                                                onChange={() => handleNotificationChange('expenseAdd')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="expenseAdd" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When an expense is edited/deleted</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="expenseEdit"
-                                                checked={notifications.expenseEdit}
-                                                onChange={() => handleNotificationChange('expenseEdit')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="expenseEdit" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When someone comments on an expense</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="expenseComment"
-                                                checked={notifications.expenseComment}
-                                                onChange={() => handleNotificationChange('expenseComment')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="expenseComment" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When an expense is due</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="expenseDue"
-                                                checked={notifications.expenseDue}
-                                                onChange={() => handleNotificationChange('expenseDue')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="expenseDue" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">When someone pays me</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="paymentReceived"
-                                                checked={notifications.paymentReceived}
-                                                onChange={() => handleNotificationChange('paymentReceived')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="paymentReceived" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="notification-group">
-                                    <h3>News and Updates</h3>
-                                    <div className="notification-option">
-                                        <label className="notification-label">Monthly summary of my activity</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="monthlySummary"
-                                                checked={notifications.monthlySummary}
-                                                onChange={() => handleNotificationChange('monthlySummary')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="monthlySummary" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="notification-option">
-                                        <label className="notification-label">CentiVerse news and updates</label>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="newsUpdates"
-                                                checked={notifications.newsUpdates}
-                                                onChange={() => handleNotificationChange('newsUpdates')}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="newsUpdates" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="notification-channels">
-                                <h3 className="subsection-title">Notification Channels</h3>
-                                <div className="channel-options">
-                                    <div className="channel-option">
-                                        <div className="channel-info">
-                                            <span className="channel-icon">📱</span>
-                                            <div className="channel-details">
-                                                <h4>Push Notifications</h4>
-                                                <p>Receive alerts on your device</p>
-                                            </div>
-                                        </div>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="pushNotifications"
-                                                checked={true}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="pushNotifications" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="channel-option">
-                                        <div className="channel-info">
-                                            <span className="channel-icon">✉️</span>
-                                            <div className="channel-details">
-                                                <h4>Email Notifications</h4>
-                                                <p>Receive notifications to {profileData.email}</p>
-                                            </div>
-                                        </div>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="emailNotifications"
-                                                checked={true}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="emailNotifications" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                    <div className="channel-option">
-                                        <div className="channel-info">
-                                            <span className="channel-icon">💬</span>
-                                            <div className="channel-details">
-                                                <h4>SMS Notifications</h4>
-                                                <p>Receive text messages to {profileData.phone}</p>
-                                            </div>
-                                        </div>
-                                        <div className="toggle-switch">
-                                            <input
-                                                type="checkbox"
-                                                id="smsNotifications"
-                                                checked={false}
-                                                disabled={!isEditing}
-                                            />
-                                            <label htmlFor="smsNotifications" className="toggle-label"></label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    </motion.div>
+                    <NotificationsSection
+                        activeSection={activeSection}
+                        handleNotificationChange={handleNotificationChange}
+                        isEditing={isEditing}
+                        notifications={notifications}
+                        profileData={profileData}
+                        sectionVariants={sectionVariants}
+                    />
                 );
-
             case 'payment':
                 return (
-                    <motion.div
-                        key="payment"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'payment' ? 'section-active' : ''}`}>
-                            <div className="section-header">
-                                <motion.h2
-                                    className="section-title"
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                >
-                                    Payment Methods
-                                </motion.h2>
-                                {isEditing && (
-                                    <motion.div
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        <Button variant="outlined" size="small" onClick={handleAddPaymentMethod}>
-                                            <span className="button-icon">+</span>
-                                            Add Method
-                                        </Button>
-                                    </motion.div>
-                                )}
-                            </div>
-
-                            <motion.div
-                                className="payment-methods-list"
-                                variants={{
-                                    animate: {
-                                        transition: {
-                                            staggerChildren: 0.1
-                                        }
-                                    }
-                                }}
-                            >
-                                <AnimatePresence>
-                                    {paymentMethods.map((method, index) => (
-                                        <motion.div
-                                            key={method.id}
-                                            className="payment-method-item"
-                                            variants={itemVariants}
-                                            custom={index}
-                                            whileHover={hoverScale}
-                                            layout
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20, scale: 0.9 }}
-                                        >
-                                            <div className="payment-method-details">
-                                                <div className="payment-method-type">
-                                                    <motion.span
-                                                        className="payment-icon"
-                                                        whileHover={{ rotate: 10, scale: 1.1 }}
-                                                    >
-                                                        {method.type === 'UPI' ? '₹' :
-                                                            method.type === 'Bank Account' ? '🏦' : '📱'}
-                                                    </motion.span>
-                                                    <span className="payment-name">{method.type}</span>
-                                                    {method.isDefault && (
-                                                        <motion.div
-                                                            initial={{ scale: 0 }}
-                                                            animate={{ scale: 1 }}
-                                                            transition={{
-                                                                type: "spring",
-                                                                stiffness: 260,
-                                                                damping: 20
-                                                            }}
-                                                        >
-                                                            <Badge variant="success">Default</Badge>
-                                                        </motion.div>
-                                                    )}
-                                                </div>
-                                                <div className="payment-method-info">
-                                                    <span>{method.details}</span>
-                                                </div>
-                                            </div>
-                                            {isEditing && (
-                                                <div className="payment-method-actions">
-                                                    {!method.isDefault && (
-                                                        <motion.button
-                                                            className="action-btn set-default"
-                                                            onClick={() => handleSetDefaultPaymentMethod(method.id)}
-                                                            whileHover={{ scale: 1.05 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                        >
-                                                            Set as Default
-                                                        </motion.button>
-                                                    )}
-                                                    <motion.button
-                                                        className="action-btn remove"
-                                                        onClick={() => handleRemovePaymentMethod(method.id)}
-                                                        whileHover={{ scale: 1.05, backgroundColor: 'rgba(229, 57, 53, 0.1)' }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                    >
-                                                        Remove
-                                                    </motion.button>
-                                                </div>
-                                            )}
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                            </motion.div>
-                        </Card>
-                    </motion.div>
+                    <PaymentMethodsSection
+                        activeSection={activeSection}
+                        handleAddPaymentMethod={handleAddPaymentMethod}
+                        handleRemovePaymentMethod={handleRemovePaymentMethod}
+                        handleSetDefaultPaymentMethod={handleSetDefaultPaymentMethod}
+                        hoverScale={hoverScale}
+                        isEditing={isEditing}
+                        itemVariants={itemVariants}
+                        paymentMethods={paymentMethods}
+                        sectionVariants={sectionVariants}
+                    />
                 );
-
             case 'security':
                 return (
-                    <motion.div
-                        key="security"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'security' ? 'section-active' : ''}`}>
-                            <motion.h2
-                                className="section-title"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Security Settings
-                            </motion.h2>
-
-                            <div className="security-container">
-                                <div className="security-item">
-                                    <div className="security-info">
-                                        <h3>Password</h3>
-                                        <p>Last changed: {formatDate(securitySettings.passwordLastChanged)}</p>
-                                    </div>
-                                    <Button variant="outlined" size="small">
-                                        Change Password
-                                    </Button>
-                                </div>
-
-                                <div className="security-item">
-                                    <div className="security-info">
-                                        <h3>Two-Factor Authentication</h3>
-                                        <p>Adds an extra layer of security to your account</p>
-                                    </div>
-                                    <div className="toggle-switch">
-                                        <input
-                                            type="checkbox"
-                                            id="twoFactorAuth"
-                                            checked={securitySettings.twoFactorAuth}
-                                            onChange={() => setSecuritySettings({
-                                                ...securitySettings,
-                                                twoFactorAuth: !securitySettings.twoFactorAuth
-                                            })}
-                                            disabled={!isEditing}
-                                        />
-                                        <label htmlFor="twoFactorAuth" className="toggle-label"></label>
-                                    </div>
-                                </div>
-
-                                <div className="security-item">
-                                    <div className="security-info">
-                                        <h3>Login Notifications</h3>
-                                        <p>Get notified when someone logs into your account</p>
-                                    </div>
-                                    <div className="toggle-switch">
-                                        <input
-                                            type="checkbox"
-                                            id="loginNotifications"
-                                            checked={securitySettings.loginNotifications}
-                                            onChange={() => setSecuritySettings({
-                                                ...securitySettings,
-                                                loginNotifications: !securitySettings.loginNotifications
-                                            })}
-                                            disabled={!isEditing}
-                                        />
-                                        <label htmlFor="loginNotifications" className="toggle-label"></label>
-                                    </div>
-                                </div>
-
-                                <div className="security-item">
-                                    <div className="security-info">
-                                        <h3>Active Sessions</h3>
-                                        <p>Manage devices where you're currently logged in</p>
-                                    </div>
-                                    <Button variant="outlined" size="small">
-                                        View Sessions
-                                    </Button>
-                                </div>
-                            </div>
-                        </Card>
-                    </motion.div>
+                    <SecuritySection
+                        activeSection={activeSection}
+                        formatDate={formatDate}
+                        isEditing={isEditing}
+                        sectionVariants={sectionVariants}
+                        securitySettings={securitySettings}
+                        setSecuritySettings={setSecuritySettings}
+                    />
                 );
-
             case 'support':
                 return (
-                    <motion.div
-                        key="support"
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={sectionVariants}
-                    >
-                        <Card className={`account-section ${activeSection === 'support' ? 'section-active' : ''}`}>
-                            <motion.h2
-                                className="section-title"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                Help & Support
-                            </motion.h2>
-
-                            <motion.div
-                                className="support-container"
-                                variants={{
-                                    animate: {
-                                        transition: {
-                                            staggerChildren: 0.1,
-                                            delayChildren: 0.2
-                                        }
-                                    }
-                                }}
-                            >
-                                {[
-                                    { icon: '📘', title: 'Knowledge Base', description: 'Browse our articles to learn more about using CentiVerse', action: 'View Articles' },
-                                    { icon: '🎯', title: 'Feature Requests', description: 'Suggest new features or improvements to our platform', action: 'Submit Request' },
-                                    { icon: '🐞', title: 'Report a Bug', description: 'Let us know if something isn\'t working as expected', action: 'Report Bug' },
-                                    { icon: '📞', title: 'Contact Support', description: 'Get in touch with our customer support team', action: 'Contact Us' }
-                                ].map((card, index) => (
-                                    <motion.div
-                                        className="support-card"
-                                        key={card.title}
-                                        variants={itemVariants}
-                                        custom={index}
-                                        whileHover={{
-                                            y: -10,
-                                            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                                        }}
-                                    >
-                                        <motion.div
-                                            className="support-icon"
-                                            animate={{
-                                                rotate: [0, 10, 0, -10, 0],
-                                            }}
-                                            transition={{
-                                                repeat: Infinity,
-                                                duration: 5,
-                                                repeatDelay: 2
-                                            }}
-                                        >
-                                            {card.icon}
-                                        </motion.div>
-                                        <h3>{card.title}</h3>
-                                        <p>{card.description}</p>
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                            <Button variant="outlined">{card.action}</Button>
-                                        </motion.div>
-                                    </motion.div>
-                                ))}
-                            </motion.div>
-                        </Card>
-                    </motion.div>
+                    <SupportSection
+                        activeSection={activeSection}
+                        itemVariants={itemVariants}
+                        sectionVariants={sectionVariants}
+                    />
                 );
-
             default:
                 return null;
         }

@@ -161,3 +161,36 @@ test.describe('7. every group tab renders (decomposition guard)', () => {
     });
   }
 });
+
+test.describe('8. account sections render (decomposition guard)', () => {
+  // Same lesson as the group tabs: nothing visited these, so a broken import
+  // inside one would not have failed a single test.
+  const sections = [
+    /personal/i,
+    /preferences/i,
+    /notifications/i,
+    /payment/i,
+    /security/i,
+    /support|help/i,
+  ];
+
+  for (const [i, label] of sections.entries()) {
+    test(`account section ${i + 1} renders without crashing`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', (e) => errors.push(e.message));
+
+      await page.addInitScript(() => window.localStorage.clear());
+      await page.goto('/account');
+      await expect(page.locator('.account-page, .account-container').first()).toBeVisible({
+        timeout: 15_000,
+      });
+
+      const item = page.locator('.menu-item').filter({ hasText: label }).first();
+      if (await item.count()) {
+        await item.click();
+        await expect(page.locator('.account-section').first()).toBeVisible({ timeout: 10_000 });
+      }
+      expect(errors).toEqual([]);
+    });
+  }
+});
