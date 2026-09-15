@@ -1,13 +1,10 @@
+import { Suspense } from 'react';
+import { Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGroupDetails } from '../../features/groups/useGroupDetails';
 import { GroupLoadingView, GroupErrorView, GroupNotFoundView } from '../../features/groups/components/GroupDetailsViews';
 import GroupExport from '../../components/groups/GroupExport/GroupExport';
-import WhiteboardTab from '../../features/groups/components/tabs/WhiteboardTab';
-import MembersTab from '../../features/groups/components/tabs/MembersTab';
-import BalancesTab from '../../features/balances/components/BalancesTab';
-import TotalsTab from '../../features/groups/components/tabs/TotalsTab';
 import ExpenseFilters from '../../features/expenses/components/ExpenseFilters';
-import ExpensesTab from '../../features/expenses/components/ExpensesTab';
 import GroupTabs from '../../features/groups/components/GroupTabs';
 import GroupHeader from '../../features/groups/components/GroupHeader';
 import QuickAddExpense from '../../features/expenses/components/QuickAddExpense';
@@ -52,7 +49,6 @@ const GroupDetails = () => {
         myExpenses,
         navigate,
         pageVariants,
-        setActiveTab,
         setExpenseFilter,
         setHoveredExpense,
         setShowExportModal,
@@ -109,10 +105,7 @@ const GroupDetails = () => {
                 />
 
                 {/* Tabs Navigation */}
-                <GroupTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                />
+                <GroupTabs activeTab={activeTab} groupId={group.id} />
 
                 {/* Filter Controls */}
                 {activeTab === 'expenses' && (
@@ -128,58 +121,35 @@ const GroupDetails = () => {
                     />
                 )}
 
-                {/* Tab Content */}
+                {/* Tab Content -- each tab is its own lazy route (7.4) */}
                 <div className="tab-content">
-                    {/* Expenses Tab */}
-                    {activeTab === 'expenses' && (
-                        <ExpensesTab
-                            group={group}
-                            filteredExpenses={filteredExpenses}
-                            formatCurrency={formatCurrency}
-                            hoveredExpense={hoveredExpense}
-                            setHoveredExpense={setHoveredExpense}
-                            toggleQuickAdd={toggleQuickAdd}
-                            containerVariants={containerVariants}
-                            cardVariants={cardVariants}
+                    <Suspense
+                        fallback={
+                            <div className="async-state async-loading" role="status" aria-live="polite">
+                                <div className="async-spinner" aria-hidden="true" />
+                            </div>
+                        }
+                    >
+                        <Outlet
+                            context={{
+                                group,
+                                expenses,
+                                filteredExpenses,
+                                balances,
+                                totalExpenses,
+                                categoryTotals,
+                                monthlyTotals,
+                                formatCurrency,
+                                hoveredExpense,
+                                setHoveredExpense,
+                                toggleQuickAdd,
+                                handleSettleUp,
+                                handleRemoveMember,
+                                containerVariants,
+                                cardVariants,
+                            }}
                         />
-                    )}
-
-                    {activeTab === 'balances' && (
-                        <BalancesTab
-                            balances={balances}
-                            formatCurrency={formatCurrency}
-                            handleSettleUp={handleSettleUp}
-                            containerVariants={containerVariants}
-                            cardVariants={cardVariants}
-                        />
-                    )}
-
-                    {activeTab === 'totals' && (
-                        <TotalsTab
-                            group={group}
-                            expenses={expenses}
-                            totalExpenses={totalExpenses}
-                            categoryTotals={categoryTotals}
-                            monthlyTotals={monthlyTotals}
-                            formatCurrency={formatCurrency}
-                            containerVariants={containerVariants}
-                            cardVariants={cardVariants}
-                        />
-                    )}
-
-                    {activeTab === 'members' && (
-                        <MembersTab
-                            group={group}
-                            expenses={expenses}
-                            formatCurrency={formatCurrency}
-                            handleSettleUp={handleSettleUp}
-                            handleRemoveMember={handleRemoveMember}
-                            containerVariants={containerVariants}
-                            cardVariants={cardVariants}
-                        />
-                    )}
-
-                    {activeTab === 'whiteboard' && <WhiteboardTab groupId={group.id} />}
+                    </Suspense>
                 </div>
 
                 {/* Enhanced Quick Add Expense Modal with modern styling and animations */}

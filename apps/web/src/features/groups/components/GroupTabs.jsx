@@ -1,15 +1,19 @@
 import { motion } from 'framer-motion';
 import { BarChart2, DollarSign, PenSquare, Users } from 'lucide-react';
 import { PieChart } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * 7.4 -- extracted from GroupDetails verbatim (behaviour-preserving):
  * identical markup and ARIA wiring; state arrives as props.
  */
-const GroupTabs = ({
-    activeTab,
-    setActiveTab,
-}) => (
+const GroupTabs = ({ activeTab, groupId }) => {
+    const navigate = useNavigate();
+    // Tabs are routes now (7.4). role/aria wiring is unchanged so the screen
+    // behaves and reads exactly as before.
+    const setActiveTab = (tab) => navigate(`/groups/${groupId}/${tab}`);
+
+    return (
     <div className="group-tabs" role="tablist">
         <motion.button
             className={`tab-btn ${activeTab === 'expenses' ? 'active' : ''}`}
@@ -77,6 +81,7 @@ const GroupTabs = ({
             Notes
         </motion.button>
     </div>
-);
+    );
+};
 
 export default GroupTabs;

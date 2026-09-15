@@ -1,6 +1,13 @@
 // In src/App.js
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  ExpensesTabRoute,
+  BalancesTabRoute,
+  TotalsTabRoute,
+  MembersTabRoute,
+  WhiteboardTabRoute,
+} from "./features/groups/components/tabs/routes";
 import "./App.css";
 import LandingPage from "./pages/LandingPage/LandingPage";
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -77,6 +84,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* 7.4: each tab is its own lazy route, so tabs get real URLs */}
               <Route
                 path="/groups/:groupId"
                 element={
@@ -84,7 +92,14 @@ function App() {
                     <GroupDetails />
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<Navigate to="expenses" replace />} />
+                <Route path="expenses" element={<ExpensesTabRoute />} />
+                <Route path="balances" element={<BalancesTabRoute />} />
+                <Route path="totals" element={<TotalsTabRoute />} />
+                <Route path="members" element={<MembersTabRoute />} />
+                <Route path="whiteboard" element={<WhiteboardTabRoute />} />
+              </Route>
             </Route>
           </Routes>
         </BrowserRouter>

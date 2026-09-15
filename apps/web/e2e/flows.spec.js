@@ -63,6 +63,11 @@ test.describe('3. group detail shows a derived, reconciling ledger', () => {
     // the balances tab and assert the invariant the domain guarantees.
     await page.getByRole('tab', { name: /balance/i }).click();
 
+    // Tabs are lazy routes since 7.4, so the panel arrives a tick after the
+    // click. Wait for it rather than reading an empty DOM -- the assertion
+    // itself is unchanged.
+    await expect(page.locator('#balances-tab')).toBeVisible({ timeout: 10_000 });
+
     const amounts = await page.locator('[class*="balance"] [class*="amount"], .balance-amount').allTextContents();
     expect(amounts.length).toBeGreaterThan(0);
   });

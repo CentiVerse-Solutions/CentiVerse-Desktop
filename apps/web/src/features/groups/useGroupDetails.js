@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
     useGroup,
     useGroupExpenses,
@@ -23,7 +23,9 @@ export const useGroupDetails = () => {
     const navigate = useNavigate();
     const [group, setGroup] = useState(null);
     const [expenses, setExpenses] = useState([]);
-    const [activeTab, setActiveTab] = useState('expenses');
+    // 7.4: the active tab is a route segment, so the URL is the source of truth.
+    const location = useLocation();
+    const activeTab = location.pathname.split('/')[3] ?? 'expenses';
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
     const [confirmAction, setConfirmAction] = useState(null);
@@ -837,7 +839,6 @@ export const useGroupDetails = () => {
         myExpenses,
         navigate,
         pageVariants,
-        setActiveTab,
         setExpenseFilter,
         setHoveredExpense,
         setShowExportModal,
