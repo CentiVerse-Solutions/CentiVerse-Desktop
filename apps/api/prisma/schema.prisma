@@ -1,0 +1,650 @@
+// ARCHITECTURE.md §6.2, implemented. The SQL sketch in the document is the
+// specification; this file is the implementation, and the two are meant to be
+// read side by side.
+//
+// Three rules govern everything below.
+//
+//   Money is `BigInt` minor units (invariant 3). Postgres `bigint`, never
+//   `float8`; `Decimal` appears only for FX rates, which are not money.
+//   `BigInt` does not JSON-serialise, so it is converted to `number` at the
+//   repository boundary and nowhere else (ADR 0004).
+//
+//   Ids are UUIDv7 (§6.2) -- time-sortable and client-generatable, which is what
+//   makes offline creation and idempotent retries possible later. The default
+//   here is a safety net; clients supply the id on the routes that accept one.
+//
+//   The ledger is append-mostly (invariant 5). Deletes set `deletedAt`, edits
+//   write an `ExpenseRevision`. Nothing is silently rewritten.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [citext]
+}
+
+// -- identity -----------------------------------------------------------------
+
+model User {
+  id String @id @default(uuid(7)) @db.Uuid
+
+  // Nullable because a placeholder member -- someone added to a group by name
+  // who has no account yet -- is an ordinary user row (§12 #9, ADR 0004).
+  // A partial unique index enforces uniqueness among live rows; see the
+  // migration, which Prisma's schema language cannot express.
+  email           String?   @db.Citext
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(6)
+
+  // Set when a placeholder is claimed by a real registration. NULL on an
+  // unclaimed placeholder, and on nothing else.
+  claimedAt DateTime? @map("claimed_at") @db.Timestamptz(6)
+
+  displayName     String    @map("display_name")
+  avatarUrl       String?   @map("avatar_url")
+  defaultCurrency String    @default("INR") @map("default_currency") @db.Char(3)
+  locale          String    @default("en-IN")
+  timezone        String    @default("Asia/Kolkata")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  credentials       AuthCredential?
+  notificationPrefs NotificationPref?
+  oauthIdentities   OauthIdentity[]
+  sessions          Session[]
+  friendshipsSent   Friendship[]      @relation("FriendshipRequester")
+  friendshipsGot    Friendship[]      @relation("FriendshipAddressee")
+  invitesSent       Invite[]          @relation("InviteInviter")
+  groupsCreated     Group[]           @relation("GroupCreatedBy")
+  memberships       GroupMember[]
+  expensesCreated   Expense[]         @relation("ExpenseCreatedBy")
+  expensePayers     ExpensePayer[]
+  expenseShares     ExpenseShare[]
+  revisionsAuthored ExpenseRevision[] @relation("RevisionChangedBy")
+  settlementsFrom   Settlement[]      @relation("SettlementFrom")
+  settlementsTo     Settlement[]      @relation("SettlementTo")
+  settlementsLogged Settlement[]      @relation("SettlementRecordedBy")
+  settlementsOked   Settlement[]      @relation("SettlementConfirmedBy")
+  attachmentsAdded  Attachment[]      @relation("AttachmentUploadedBy")
+  comments          Comment[]
+  activityEvents    ActivityEvent[]   @relation("ActivityActor")
+  activityReads     ActivityRead[]
+  budgets           Budget[]
+  notesAuthored     WhiteboardNote[]  @relation("NoteAuthor")
+  noteMentions      NoteMention[]
+  noteReactions     NoteReaction[]
+  noteComments      NoteComment[]     @relation("NoteCommentAuthor")
+  noteReads         NoteRead[]
+
+  @@index([email])
+  @@map("users")
+}
+
+model AuthCredential {
+  userId String @id @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // argon2id at the OWASP baseline m=19456, t=2, p=1 (§6.4). The parameters are
+  // encoded in the PHC string, so a future cost increase can be applied lazily
+  // on the next successful login without a migration.
+  passwordHash String   @map("password_hash")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("auth_credentials")
+}
+
+model OauthIdentity {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String
+  providerUid String   @map("provider_uid")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([provider, providerUid])
+  @@index([userId])
+  @@map("oauth_identities")
+}
+
+/// One row per refresh token, rotated on every use (§6.4). This is also what
+/// makes the Account -> Security screen show real sessions rather than a fixture.
+model Session {
+  id     String @id @default(uuid(7)) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // The token itself is never stored. Rotation replaces this hash; presenting a
+  // hash that has already been rotated away is token theft, and revokes the
+  // whole family below.
+  refreshTokenHash String @unique @map("refresh_token_hash")
+
+  // Every token minted from one login shares a family id. Reuse detection
+  // revokes the family, not just the one session (§6.4).
+  familyId String @map("family_id") @db.Uuid
+
+  userAgent  String?   @map("user_agent")
+  ip         String?   @db.Inet
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastUsedAt DateTime  @default(now()) @map("last_used_at") @db.Timestamptz(6)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(6)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("sessions")
+}
+
+/// Single-use hashed tokens for email verification and password reset (§6.4).
+/// Not in the §6.2 sketch, but §6.4 requires them and they need somewhere to live.
+model VerificationToken {
+  id        String              @id @default(uuid(7)) @db.Uuid
+  userId    String              @map("user_id") @db.Uuid
+  purpose   VerificationPurpose
+  tokenHash String              @unique @map("token_hash")
+  expiresAt DateTime            @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime?           @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([userId, purpose])
+  @@map("verification_tokens")
+}
+
+enum VerificationPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+
+  @@map("verification_purpose")
+}
+
+// -- social graph -------------------------------------------------------------
+
+model Friendship {
+  id          String           @id @default(uuid(7)) @db.Uuid
+  requesterId String           @map("requester_id") @db.Uuid
+  requester   User             @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addresseeId String           @map("addressee_id") @db.Uuid
+  addressee   User             @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  status      FriendshipStatus
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  respondedAt DateTime?        @map("responded_at") @db.Timestamptz(6)
+
+  // §6.2 wants UNIQUE (LEAST(a,b), GREATEST(a,b)) so that A->B and B->A are the
+  // same friendship. Prisma cannot express a functional index; the migration
+  // adds it by hand.
+  @@index([requesterId])
+  @@index([addresseeId])
+  @@map("friendships")
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+
+  @@map("friendship_status")
+}
+
+model Invite {
+  id         String    @id @default(uuid(7)) @db.Uuid
+  groupId    String?   @map("group_id") @db.Uuid
+  group      Group?    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviterId  String    @map("inviter_id") @db.Uuid
+  inviter    User      @relation("InviteInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  email      String?   @db.Citext
+  tokenHash  String    @unique @map("token_hash")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(6)
+  acceptedAt DateTime? @map("accepted_at") @db.Timestamptz(6)
+
+  @@index([groupId])
+  @@map("invites")
+}
+
+// -- groups -------------------------------------------------------------------
+
+model Group {
+  id        String  @id @default(uuid(7)) @db.Uuid
+  name      String
+  avatarUrl String? @map("avatar_url")
+  bannerUrl String? @map("banner_url")
+
+  // One currency per group (§12 #4, ADR 0002). Every expense in the group uses
+  // it; the FX columns on Expense exist for a later per-expense model.
+  currency String @db.Char(3)
+
+  // Display-only preference. `simplifyDebts()` output is never persisted as
+  // settlements (invariant 9).
+  simplifyDebts Boolean @default(false) @map("simplify_debts")
+
+  createdById String    @map("created_by") @db.Uuid
+  createdBy   User      @relation("GroupCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  archivedAt  DateTime? @map("archived_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  members         GroupMember[]
+  expenses        Expense[]
+  settlements     Settlement[]
+  invites         Invite[]
+  balanceCache    BalanceCacheEntry[]
+  whiteboardNotes WhiteboardNote[]
+  budgets         Budget[]
+  recurring       RecurringExpense[]
+
+  @@map("groups")
+}
+
+model GroupMember {
+  groupId String    @map("group_id") @db.Uuid
+  group   Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId  String    @map("user_id") @db.Uuid
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    GroupRole @default(MEMBER)
+
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  // A member who leaves keeps their ledger history; membership is what ends,
+  // not the expenses they were part of.
+  leftAt DateTime? @map("left_at") @db.Timestamptz(6)
+
+  @@id([groupId, userId])
+  @@index([userId])
+  @@map("group_members")
+}
+
+enum GroupRole {
+  OWNER
+  ADMIN
+  MEMBER
+
+  @@map("group_role")
+}
+
+// -- the ledger ---------------------------------------------------------------
+
+model Expense {
+  id String @id @default(uuid(7)) @db.Uuid
+
+  // NULL = a 1:1 expense outside any group (§6.2).
+  groupId String? @map("group_id") @db.Uuid
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  description String
+  notes       String?
+  currency    String  @db.Char(3)
+  totalMinor  BigInt  @map("total_minor")
+
+  // Frozen at creation; history is never recomputed when a rate changes (§6.2).
+  originalCurrency   String?  @map("original_currency") @db.Char(3)
+  originalTotalMinor BigInt?  @map("original_total_minor")
+  fxRate             Decimal? @map("fx_rate") @db.Decimal(18, 8)
+
+  expenseDate DateTime  @map("expense_date") @db.Timestamptz(6)
+  categoryId  String?   @map("category_id") @db.Uuid
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  // The SplitStrategy that produced the shares, stored verbatim. Keeping it
+  // means an edit can reopen the form in the state the user left it, and a
+  // recompute can prove the stored shares against core (invariant 4).
+  splitStrategy Json @map("split_strategy")
+
+  recurringId String?           @map("recurring_id") @db.Uuid
+  recurring   RecurringExpense? @relation(fields: [recurringId], references: [id])
+
+  createdById String   @map("created_by") @db.Uuid
+  createdBy   User     @relation("ExpenseCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Optimistic concurrency (§6.3). A PATCH carrying a stale version gets 409
+  // with the current state, never a silent clobber.
+  version Int @default(1)
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  payers    ExpensePayer[]
+  shares    ExpenseShare[]
+  revisions ExpenseRevision[]
+  comments  Comment[]
+
+  @@index([groupId, expenseDate(sort: Desc)])
+  @@index([categoryId])
+  @@index([recurringId])
+  @@map("expenses")
+}
+
+/// Who actually paid, and how much. Multiple payers are supported from the
+/// start; a single-payer expense is just one row.
+model ExpensePayer {
+  expenseId   String  @map("expense_id") @db.Uuid
+  expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  userId      String  @map("user_id") @db.Uuid
+  user        User    @relation(fields: [userId], references: [id])
+  amountMinor BigInt  @map("amount_minor")
+
+  @@id([expenseId, userId])
+  @@index([userId])
+  @@map("expense_payers")
+}
+
+/// Who owes what. Written only from `computeShares` output (non-negotiable 2);
+/// no SQL and no service ever divides an amount itself.
+model ExpenseShare {
+  expenseId String  @map("expense_id") @db.Uuid
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  userId    String  @map("user_id") @db.Uuid
+  user      User    @relation(fields: [userId], references: [id])
+
+  // Signed: an ADJUSTMENT split can legitimately leave a participant negative.
+  amountMinor BigInt @map("amount_minor")
+
+  @@id([expenseId, userId])
+  @@index([userId])
+  @@map("expense_shares")
+}
+
+/// Full prior state on every edit, so "who changed this and when" is answerable
+/// and the activity feed has something real to render (invariant 5).
+model ExpenseRevision {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  expenseId   String   @map("expense_id") @db.Uuid
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  version     Int
+  snapshot    Json
+  changedById String   @map("changed_by") @db.Uuid
+  changedBy   User     @relation("RevisionChangedBy", fields: [changedById], references: [id])
+  changedAt   DateTime @default(now()) @map("changed_at") @db.Timestamptz(6)
+  reason      String?
+
+  @@unique([expenseId, version])
+  @@map("expense_revisions")
+}
+
+model Settlement {
+  id          String  @id @default(uuid(7)) @db.Uuid
+  groupId     String? @map("group_id") @db.Uuid
+  group       Group?  @relation(fields: [groupId], references: [id])
+  fromUserId  String  @map("from_user_id") @db.Uuid
+  fromUser    User    @relation("SettlementFrom", fields: [fromUserId], references: [id])
+  toUserId    String  @map("to_user_id") @db.Uuid
+  toUser      User    @relation("SettlementTo", fields: [toUserId], references: [id])
+  currency    String  @db.Char(3)
+  amountMinor BigInt  @map("amount_minor")
+
+  method      SettlementMethod @default(OTHER)
+  externalRef String?          @map("external_ref")
+  note        String?
+
+  settledAt    DateTime @map("settled_at") @db.Timestamptz(6)
+  recordedById String   @map("recorded_by") @db.Uuid
+  recordedBy   User     @relation("SettlementRecordedBy", fields: [recordedById], references: [id])
+
+  // Two-sided: the payee confirms what the payer recorded.
+  confirmedAt   DateTime? @map("confirmed_at") @db.Timestamptz(6)
+  confirmedById String?   @map("confirmed_by") @db.Uuid
+  confirmedBy   User?     @relation("SettlementConfirmedBy", fields: [confirmedById], references: [id])
+
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([groupId, settledAt(sort: Desc)])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@map("settlements")
+}
+
+enum SettlementMethod {
+  UPI
+  CASH
+  BANK
+  OTHER
+
+  @@map("settlement_method")
+}
+
+// -- derived (cache, never truth) ---------------------------------------------
+
+/// Maintained in the same transaction as the mutation that invalidates it.
+/// Invariant 6: a nightly job recomputes from the ledger and asserts equality.
+/// Never read as authority in a test -- tests derive from the ledger.
+model BalanceCacheEntry {
+  groupId     String   @map("group_id") @db.Uuid
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromUserId  String   @map("from_user_id") @db.Uuid
+  toUserId    String   @map("to_user_id") @db.Uuid
+  currency    String   @db.Char(3)
+  amountMinor BigInt   @map("amount_minor")
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@id([groupId, fromUserId, toUserId, currency])
+  @@map("balance_cache")
+}
+
+// -- idempotency --------------------------------------------------------------
+
+/// §6.3: "Every mutation accepts an Idempotency-Key header; the response is
+/// cached against it for 24h." Scoped per user so one caller's key cannot
+/// collide with -- or read -- another's.
+model IdempotencyKey {
+  key    String
+  userId String @map("user_id") @db.Uuid
+  method String
+  path   String
+
+  // Hash of the request body: the same key with a different payload is a bug in
+  // the caller, and must fail loudly rather than return the wrong cached reply.
+  requestHash    String   @map("request_hash")
+  responseStatus Int      @map("response_status")
+  responseBody   Json     @map("response_body")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(6)
+
+  @@id([userId, key])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+// -- everything else ----------------------------------------------------------
+
+model Category {
+  id       String  @id @default(uuid(7)) @db.Uuid
+  key      String  @unique
+  label    String
+  icon     String?
+  isSystem Boolean @default(true) @map("is_system")
+
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@map("categories")
+}
+
+/// Blobs never pass through the API (§6.3): the client uploads to a presigned
+/// URL and this row records where it landed.
+model Attachment {
+  id           String   @id @default(uuid(7)) @db.Uuid
+  ownerType    String   @map("owner_type")
+  ownerId      String   @map("owner_id") @db.Uuid
+  storageKey   String   @map("storage_key")
+  mime         String
+  bytes        BigInt
+  width        Int?
+  height       Int?
+  uploadedById String   @map("uploaded_by") @db.Uuid
+  uploadedBy   User     @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([ownerType, ownerId])
+  @@map("attachments")
+}
+
+model Comment {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  expenseId String    @map("expense_id") @db.Uuid
+  expense   Expense   @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  authorId  String    @map("author_id") @db.Uuid
+  author    User      @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  editedAt  DateTime? @map("edited_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  @@index([expenseId, createdAt])
+  @@map("comments")
+}
+
+/// Written in the SAME TRANSACTION as the mutation it describes (§6.2), so the
+/// feed can never disagree with the ledger.
+model ActivityEvent {
+  id          String   @id @default(uuid(7)) @db.Uuid
+  actorId     String   @map("actor_id") @db.Uuid
+  actor       User     @relation("ActivityActor", fields: [actorId], references: [id])
+  groupId     String?  @map("group_id") @db.Uuid
+  subjectType String   @map("subject_type")
+  subjectId   String   @map("subject_id") @db.Uuid
+  verb        String
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  reads ActivityRead[]
+
+  @@index([groupId, createdAt(sort: Desc)])
+  @@index([actorId])
+  @@map("activity_events")
+}
+
+model ActivityRead {
+  userId  String        @map("user_id") @db.Uuid
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventId String        @map("event_id") @db.Uuid
+  event   ActivityEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  readAt  DateTime      @default(now()) @map("read_at") @db.Timestamptz(6)
+
+  @@id([userId, eventId])
+  @@map("activity_reads")
+}
+
+model NotificationPref {
+  userId String @id @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prefs  Json
+
+  @@map("notification_prefs")
+}
+
+model RecurringExpense {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  groupId   String    @map("group_id") @db.Uuid
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  template  Json
+  rrule     String
+  nextRunAt DateTime? @map("next_run_at") @db.Timestamptz(6)
+  active    Boolean   @default(true)
+
+  expenses Expense[]
+
+  @@index([active, nextRunAt])
+  @@map("recurring_expenses")
+}
+
+model Budget {
+  id          String    @id @default(uuid(7)) @db.Uuid
+  userId      String?   @map("user_id") @db.Uuid
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  groupId     String?   @map("group_id") @db.Uuid
+  group       Group?    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  categoryId  String?   @map("category_id") @db.Uuid
+  category    Category? @relation(fields: [categoryId], references: [id])
+  period      String
+  amountMinor BigInt    @map("amount_minor")
+  currency    String    @db.Char(3)
+
+  @@index([userId])
+  @@index([groupId])
+  @@map("budgets")
+}
+
+/// `Decimal`, not `BigInt`: a rate is not money. Invariant 3 forbids floats for
+/// money specifically, and a rate needs fractional precision.
+model FxRate {
+  base  String   @db.Char(3)
+  quote String   @db.Char(3)
+  rate  Decimal  @db.Decimal(18, 8)
+  asOf  DateTime @map("as_of") @db.Date
+
+  @@id([base, quote, asOf])
+  @@map("fx_rates")
+}
+
+// -- whiteboard ---------------------------------------------------------------
+
+model WhiteboardNote {
+  id        String    @id @default(uuid(7)) @db.Uuid
+  groupId   String    @map("group_id") @db.Uuid
+  group     Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String    @map("author_id") @db.Uuid
+  author    User      @relation("NoteAuthor", fields: [authorId], references: [id])
+  body      String
+  color     String?
+  position  Json
+  pinned    Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  mentions  NoteMention[]
+  reactions NoteReaction[]
+  comments  NoteComment[]
+  reads     NoteRead[]
+
+  @@index([groupId, createdAt(sort: Desc)])
+  @@map("whiteboard_notes")
+}
+
+model NoteMention {
+  noteId String         @map("note_id") @db.Uuid
+  note   WhiteboardNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId String         @map("user_id") @db.Uuid
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([noteId, userId])
+  @@map("note_mentions")
+}
+
+model NoteReaction {
+  noteId String         @map("note_id") @db.Uuid
+  note   WhiteboardNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId String         @map("user_id") @db.Uuid
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji  String
+
+  @@id([noteId, userId, emoji])
+  @@map("note_reactions")
+}
+
+model NoteComment {
+  id        String         @id @default(uuid(7)) @db.Uuid
+  noteId    String         @map("note_id") @db.Uuid
+  note      WhiteboardNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  authorId  String         @map("author_id") @db.Uuid
+  author    User           @relation("NoteCommentAuthor", fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([noteId, createdAt])
+  @@map("note_comments")
+}
+
+model NoteRead {
+  noteId String         @map("note_id") @db.Uuid
+  note   WhiteboardNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  userId String         @map("user_id") @db.Uuid
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  readAt DateTime       @default(now()) @map("read_at") @db.Timestamptz(6)
+
+  @@id([noteId, userId])
+  @@map("note_reads")
+}
