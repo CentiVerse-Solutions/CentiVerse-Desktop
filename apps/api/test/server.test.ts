@@ -7,12 +7,17 @@ import { ApiError, ProblemType } from '../src/lib/problem';
 const testEnv = {
   NODE_ENV: 'test',
   DATABASE_URL: 'postgresql://centiverse:centiverse@localhost:5432/centiverse_test',
+  JWT_SECRET: 'test-secret-that-is-comfortably-long-enough',
   LOG_LEVEL: 'silent',
 };
 
 describe('env', () => {
   it('rejects a missing DATABASE_URL rather than booting half-configured', () => {
     expect(() => loadEnv({ NODE_ENV: 'test' })).toThrow(/DATABASE_URL/);
+  });
+
+  it('refuses a JWT secret short enough to brute-force offline', () => {
+    expect(() => loadEnv({ ...testEnv, JWT_SECRET: 'too-short' })).toThrow(/JWT_SECRET/);
   });
 
   it('splits CORS_ORIGINS into a list', () => {

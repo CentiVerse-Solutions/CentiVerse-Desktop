@@ -10,6 +10,17 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().url(),
+  /**
+   * Signs the 15-minute access tokens (§6.4). 32 characters is the floor
+   * because a short secret makes the signature forgeable offline, which defeats
+   * the point of not doing a database lookup per request.
+   */
+  JWT_SECRET: z.string().min(32, 'must be at least 32 characters'),
+  /**
+   * Where the refresh cookie is scoped. Left unset for localhost, where a
+   * Domain attribute would stop the cookie being set at all.
+   */
+  COOKIE_DOMAIN: z.string().optional(),
   /** Comma-separated list of origins allowed to send credentialed requests. */
   CORS_ORIGINS: z
     .string()

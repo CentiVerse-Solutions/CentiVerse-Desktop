@@ -4,7 +4,10 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import type { Env } from './config/env';
+import { getDb } from './db/prisma';
 import { installProblemHandler } from './lib/errorHandler';
+import { registerAuthPlugin } from './plugins/auth';
+import { authRoutes } from './routes/auth';
 import { healthRoutes } from './routes/health';
 
 /**
@@ -46,9 +49,15 @@ export const buildServer = async (env: Env): Promise<FastifyInstance> => {
     timeWindow: '1 minute',
   });
 
+  await registerAuthPlugin(app, env);
+
   installProblemHandler(app);
 
   await app.register(healthRoutes);
+
+  // §6.3: everything but the health check is versioned.
+  const db = getDb(env.DATABASE_URL);
+  await app.register(authRoutes(db, env), { prefix: '/v1' });
 
   return app;
 };

@@ -7,6 +7,7 @@
  * strings. It stays deleted: endpoints become typed functions in Phase 5, not
  * string constants.
  */
+export * from './entities/auth';
 export * from './entities/common';
 export * from './entities/expense';
 export * from './entities/user';
