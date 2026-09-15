@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Image, Plus, Camera, Search, Check } from 'lucide-react';
 import './NewGroupModal.css';
+import NewGroupHeader from '../../../features/groups/components/newGroup/NewGroupHeader';
+import NewGroupFooter from '../../../features/groups/components/newGroup/NewGroupFooter';
 import GroupDetailsStep from '../../../features/groups/components/newGroup/GroupDetailsStep';
 import GroupMembersStep from '../../../features/groups/components/newGroup/GroupMembersStep';
 
@@ -210,20 +212,10 @@ const NewGroupModal = ({ isOpen, onClose, onCreateGroup, friends = [] }) => {
                     aria-modal="true"
                     aria-labelledby="new-group-title"
                 >
-                    <div className="modal-header">
-                        <h2 id="new-group-title" className="modal-title">
-                            <Users className="modal-title-icon" size={20} />
-                            {step === 1 ? 'Create New Group' : 'Add Group Members'}
-                        </h2>
-                        <motion.button
-                            className="modal-close-btn"
-                            onClick={onClose}
-                            whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.06)" }}
-                            whileTap={{ scale: 0.92 }}
-                        >
-                            <X size={20} />
-                        </motion.button>
-                    </div>
+                    <NewGroupHeader
+                        onClose={onClose}
+                        step={step}
+                    />
 
                     <div className="modal-steps">
                         <div className={`modal-step ${step === 1 ? 'active' : ''}`}>
@@ -267,50 +259,12 @@ const NewGroupModal = ({ isOpen, onClose, onCreateGroup, friends = [] }) => {
                             )}
                         </AnimatePresence>
 
-                        <div className="modal-footer">
-                            {step === 1 ? (
-                                <div className="footer-buttons">
-                                    <motion.button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={onClose}
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Cancel
-                                    </motion.button>
-                                    <motion.button
-                                        type="button"
-                                        className="btn btn-primary"
-                                        onClick={handleNextStep}
-                                        whileHover={{ y: -2, boxShadow: "0 5px 15px rgba(105, 162, 151, 0.3)" }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Next
-                                    </motion.button>
-                                </div>
-                            ) : (
-                                <div className="footer-buttons">
-                                    <motion.button
-                                        type="button"
-                                        className="btn btn-secondary"
-                                        onClick={handlePrevStep}
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Back
-                                    </motion.button>
-                                    <motion.button
-                                        type="submit"
-                                        className="btn btn-primary"
-                                        whileHover={{ y: -2, boxShadow: "0 5px 15px rgba(105, 162, 151, 0.3)" }}
-                                        whileTap={{ scale: 0.95 }}
-                                    >
-                                        Create Group
-                                    </motion.button>
-                                </div>
-                            )}
-                        </div>
+                        <NewGroupFooter
+                            handleNextStep={handleNextStep}
+                            handlePrevStep={handlePrevStep}
+                            onClose={onClose}
+                            step={step}
+                        />
                     </form>
                 </motion.div>
             </motion.div>
