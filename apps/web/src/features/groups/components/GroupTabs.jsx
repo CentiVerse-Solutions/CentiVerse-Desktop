@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion';
-import { BarChart2, DollarSign, PenSquare, Users } from 'lucide-react';
-import { PieChart } from 'recharts';
+import { BarChart2, DollarSign, PenSquare, PieChart, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 /**
