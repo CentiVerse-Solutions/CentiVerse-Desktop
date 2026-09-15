@@ -11,6 +11,7 @@ import { toLegacyExpenses, toLegacyBalances } from '../../data/legacy';
 import { VIEWER_ID } from '../../shared/people/viewer';
 import { pageVariants, itemVariants, containerVariants, cardVariants } from './animationVariants';
 import { useExpenseForm } from '../expenses/useExpenseForm';
+import { useGroupDialogs } from './useGroupDialogs';
 
 /**
  * 7.4 -- the state, data loading and handlers that used to live inside
@@ -27,25 +28,19 @@ export const useGroupDetails = () => {
     // 7.4: the active tab is a route segment, so the URL is the source of truth.
     const location = useLocation();
     const activeTab = location.pathname.split('/')[3] ?? 'expenses';
-    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-    const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-    const [confirmAction, setConfirmAction] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showSidebar, setShowSidebar] = useState(true);
     const [expenseFilter, setExpenseFilter] = useState('all'); // 'all', 'you_paid', 'you_involved'
     const [timePeriod, setTimePeriod] = useState('all'); // 'all', 'this_month', 'last_month', 'this_year'
     const [sortBy, setSortBy] = useState('date_desc'); // 'date_desc', 'date_asc', 'amount_desc', 'amount_asc'
     const [selectedMember, setSelectedMember] = useState(null);
     const [hoveredExpense, setHoveredExpense] = useState(null);
-    const [showExportModal, setShowExportModal] = useState(false);
 
 
     // State for the expense form
 
     // State for individual splits when using unequal, percentage, or shares
-    const [memberToRemove, setMemberToRemove] = useState(null);
 
     // §5.2 -- data comes from the seam. Loading and error are real query states.
     const numericGroupId = Number.parseInt(groupId, 10);
@@ -54,6 +49,29 @@ export const useGroupDetails = () => {
     const balancesQuery = useGroupBalances(numericGroupId);
     const createExpense = useCreateExpense();
     const createSettlement = useCreateSettlement();
+
+    // §4.4 / non-negotiable 2: balances are DERIVED by @centiverse/core.
+    // This used to compute `totalAmount / splitCount` in floats right here.
+    const balances = useMemo(
+        () => toLegacyBalances(balancesQuery.data),
+        [balancesQuery.data],
+    );
+
+    // 7.4: dialogs (settle-up, member removal, confirmation) are their own hook.
+    const {
+        isQuickAddOpen,
+        setIsQuickAddOpen,
+        isConfirmDialogOpen,
+        memberToRemove,
+        showSidebar,
+        toggleSidebar,
+        showExportModal,
+        setShowExportModal,
+        handleSettleUp,
+        handleRemoveMember,
+        handleConfirmAction,
+        handleCancelConfirm,
+    } = useGroupDialogs({ group, setGroup, groupId, balances, createSettlement });
 
     // 7.4: the expense form is its own hook; the screen just wires it up.
     const {
@@ -76,6 +94,7 @@ export const useGroupDetails = () => {
         setFormErrors,
         setIsQuickAddOpen,
     });
+
 
     useEffect(() => {
         setIsLoading(groupQuery.isPending || expensesQuery.isPending);
@@ -107,11 +126,6 @@ export const useGroupDetails = () => {
         if (expensesQuery.data) setExpenses(toLegacyExpenses(expensesQuery.data));
     }, [expensesQuery.data]);
 
-    // Handle sidebar toggle
-    const toggleSidebar = () => {
-        setShowSidebar(prev => !prev);
-    };
-
     const toggleQuickAdd = () => {
         setIsQuickAddOpen(!isQuickAddOpen);
         // Reset form errors when opening/closing modal
@@ -119,96 +133,8 @@ export const useGroupDetails = () => {
     };
 
     // Handler for expense form input changes
-    const handleSettleUp = (memberId) => {
-        if (!group) return;
 
-        // Find the member
-        const member = group.members.find(m => m.id === memberId);
-        if (!member) return;
 
-        // Get the balance for this member
-        const balance = balances.find(b => b.id === memberId);
-        if (!balance || balance.balance === 0) return;
-
-        // Create a settlement expense
-        const settlement = {
-            id: Date.now(),
-            groupId: parseInt(groupId),
-            description: `Settlement with ${member.name}`,
-            amount: Math.abs(balance.balance),
-            date: new Date().toISOString().slice(0, 10),
-            paidBy: balance.balance < 0
-                ? member // They owe you
-                : group.members.find(m => m.id === VIEWER_ID), // You owe them
-            category: {
-                id: 'other',
-                name: 'Settlement',
-                icon: '💰'
-            },
-            participants: [
-                member,
-                group.members.find(m => m.id === VIEWER_ID)
-            ],
-            isSettlement: true
-        };
-
-        // §4.4: a settlement is its own ledger entry between two real parties,
-        // never a synthetic expense row.
-        createSettlement.mutate({
-            groupId: parseInt(groupId, 10),
-            from: balance.balance < 0 ? member.id : VIEWER_ID,
-            to: balance.balance < 0 ? VIEWER_ID : member.id,
-            amountMinor: Math.round(Math.abs(balance.balance) * 100),
-            currency: group.currency || 'INR',
-            method: 'OTHER',
-        });
-
-        // Show success notification (in a real app)
-        console.log('Settlement added:', settlement);
-    };
-
-    // Handle member removal with confirmation
-    const handleRemoveMember = (memberId) => {
-        if (!group) return;
-
-        // Find the member
-        const member = group.members.find(m => m.id === memberId);
-        if (!member || member.id === VIEWER_ID) return;
-
-        // Set up confirmation dialog
-        setMemberToRemove(member);
-        setConfirmAction(() => () => {
-            // This would be an API call in a real app
-            // const response = await fetch(`/api/groups/${groupId}/members/${memberId}`, {
-            //   method: 'DELETE',
-            // });
-
-            // if (!response.ok) {
-            //   console.error('Failed to remove member');
-            //   return;
-            // }
-
-            const updatedGroup = {
-                ...group,
-                members: group.members.filter(m => m.id !== memberId)
-            };
-
-            setGroup(updatedGroup);
-            setIsConfirmDialogOpen(false);
-
-            // Show success notification
-            console.log(`Removed ${member.name} from group`);
-        });
-
-        setIsConfirmDialogOpen(true);
-    };
-
-    // §4.4 / non-negotiable 2: balances are DERIVED by @centiverse/core.
-    // This used to compute `totalAmount / splitCount` in floats right here.
-    const balances = useMemo(
-        () => toLegacyBalances(balancesQuery.data),
-        [balancesQuery.data],
-    );
 
     // Format currency with proper locale support
     const formatCurrency = (amount) => {
@@ -286,18 +212,6 @@ export const useGroupDetails = () => {
     }, [expenses, expenseFilter, timePeriod, sortBy, selectedMember]);
 
     // Handle confirmation dialog
-    const handleConfirmAction = () => {
-        if (confirmAction) {
-            confirmAction();
-        }
-        setIsConfirmDialogOpen(false);
-    };
-
-    const handleCancelConfirm = () => {
-        setIsConfirmDialogOpen(false);
-        setConfirmAction(null);
-        setMemberToRemove(null);
-    };
 
     // Loading state
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
