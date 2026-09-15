@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Users, Image, Plus, Camera, Search, Check } from 'lucide-react';
 import './NewGroupModal.css';
+import GroupDetailsStep from '../../../features/groups/components/newGroup/GroupDetailsStep';
+import GroupMembersStep from '../../../features/groups/components/newGroup/GroupMembersStep';
 
 const NewGroupModal = ({ isOpen, onClose, onCreateGroup, friends = [] }) => {
     const [formData, setFormData] = useState({
@@ -238,174 +240,30 @@ const NewGroupModal = ({ isOpen, onClose, onCreateGroup, friends = [] }) => {
                     <form onSubmit={handleSubmit} className="new-group-form">
                         <AnimatePresence mode="wait">
                             {step === 1 && (
-                                <motion.div
-                                    key="step1"
-                                    className="form-step"
-                                    variants={stepVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                >
-                                    <div className="form-group">
-                                        <label htmlFor="name">Group Name*</label>
-                                        <input
-                                            type="text"
-                                            id="name"
-                                            name="name"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            placeholder="Enter group name"
-                                            className={errors.name ? 'error' : ''}
-                                        />
-                                        {errors.name && <div className="error-message">{errors.name}</div>}
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="description">Description (optional)</label>
-                                        <textarea
-                                            id="description"
-                                            name="description"
-                                            value={formData.description}
-                                            onChange={handleChange}
-                                            placeholder="What is this group for?"
-                                            rows="3"
-                                        ></textarea>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label htmlFor="currency">Currency</label>
-                                        <select
-                                            id="currency"
-                                            name="currency"
-                                            value={formData.currency}
-                                            onChange={handleChange}
-                                        >
-                                            <option value="USD">US Dollar ($)</option>
-                                            <option value="EUR">Euro (€)</option>
-                                            <option value="GBP">British Pound (£)</option>
-                                            <option value="INR">Indian Rupee (₹)</option>
-                                            <option value="CAD">Canadian Dollar (CA$)</option>
-                                            <option value="AUD">Australian Dollar (A$)</option>
-                                            <option value="JPY">Japanese Yen (¥)</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Group Avatar*</label>
-                                        <div className="avatar-grid">
-                                            {defaultAvatars.map((avatar, index) => (
-                                                <motion.div
-                                                    key={index}
-                                                    className={`avatar-option ${selectedAvatar === avatar ? 'selected' : ''}`}
-                                                    onClick={() => setSelectedAvatar(avatar)}
-                                                    whileHover={{ scale: 1.05 }}
-                                                    whileTap={{ scale: 0.95 }}
-                                                >
-                                                    <img src={avatar} alt={`Avatar option ${index + 1}`} />
-                                                    {selectedAvatar === avatar && (
-                                                        <div className="avatar-selected-check">
-                                                            <Check size={16} />
-                                                        </div>
-                                                    )}
-                                                </motion.div>
-                                            ))}
-                                            <motion.div
-                                                className="avatar-option upload"
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                            >
-                                                <div className="upload-icon">
-                                                    <Camera size={24} />
-                                                </div>
-                                                <span>Upload</span>
-                                            </motion.div>
-                                        </div>
-                                        {errors.avatar && <div className="error-message">{errors.avatar}</div>}
-                                    </div>
-                                </motion.div>
+                                <GroupDetailsStep
+                                    defaultAvatars={defaultAvatars}
+                                    errors={errors}
+                                    formData={formData}
+                                    handleChange={handleChange}
+                                    selectedAvatar={selectedAvatar}
+                                    setSelectedAvatar={setSelectedAvatar}
+                                    step={step}
+                                    stepVariants={stepVariants}
+                                />
                             )}
 
                             {step === 2 && (
-                                <motion.div
-                                    key="step2"
-                                    className="form-step"
-                                    variants={stepVariants}
-                                    initial="hidden"
-                                    animate="visible"
-                                    exit="exit"
-                                >
-                                    <div className="form-group">
-                                        <label>Search Friends</label>
-                                        <div className="search-input">
-                                            <Search size={18} className="search-icon" />
-                                            <input
-                                                type="text"
-                                                placeholder="Search by name or email"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                            {searchQuery && (
-                                                <motion.button
-                                                    type="button"
-                                                    className="clear-search"
-                                                    onClick={() => setSearchQuery('')}
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.9 }}
-                                                >
-                                                    <X size={14} />
-                                                </motion.button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="form-group">
-                                        <label>Select Members*</label>
-                                        <div className="friends-list">
-                                            {filteredFriends.length > 0 ? (
-                                                filteredFriends.map((friend, index) => {
-                                                    const isSelected = formData.members.some(m => m.id === friend.id);
-                                                    return (
-                                                        <motion.div
-                                                            key={friend.id}
-                                                            className={`friend-item ${isSelected ? 'selected' : ''}`}
-                                                            onClick={() => toggleMember(friend)}
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            transition={{ delay: index * 0.05 }}
-                                                            whileHover={{ backgroundColor: "rgba(105, 162, 151, 0.1)" }}
-                                                        >
-                                                            <div className="friend-avatar">
-                                                                <img src={friend.avatar} alt={friend.name} />
-                                                            </div>
-                                                            <div className="friend-info">
-                                                                <div className="friend-name">{friend.name}</div>
-                                                                <div className="friend-email">{friend.email}</div>
-                                                            </div>
-                                                            <div className="friend-select">
-                                                                <div className={`checkbox ${isSelected ? 'checked' : ''}`}>
-                                                                    {isSelected && <Check size={14} />}
-                                                                </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    );
-                                                })
-                                            ) : (
-                                                <div className="no-results">
-                                                    <p>No friends found matching your search.</p>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {errors.members && <div className="error-message">{errors.members}</div>}
-                                    </div>
-
-                                    <div className="selected-members-summary">
-                                        <p>
-                                            <strong>Selected: </strong>
-                                            {formData.members.length}
-                                            {formData.members.length === 1 ? ' member' : ' members'}
-                                        </p>
-                                    </div>
-                                </motion.div>
+                                <GroupMembersStep
+                                    errors={errors}
+                                    filteredFriends={filteredFriends}
+                                    formData={formData}
+                                    friends={friends}
+                                    searchQuery={searchQuery}
+                                    setSearchQuery={setSearchQuery}
+                                    step={step}
+                                    stepVariants={stepVariants}
+                                    toggleMember={toggleMember}
+                                />
                             )}
                         </AnimatePresence>
 
