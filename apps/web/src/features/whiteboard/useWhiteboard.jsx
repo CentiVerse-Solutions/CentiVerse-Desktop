@@ -1,5 +1,11 @@
-import { AtSign } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
+import { CURRENT_USER, GROUP_MEMBERS, SEED_NOTES } from './whiteboardSeed';
+import {
+    parseTextWithMentions as parseMentions,
+    extractMentions as findMentions,
+    formatDate,
+    formatRelativeTime,
+} from './whiteboardText';
 
 /**
  * 7.4 -- Whiteboard's state, seed data and handlers, lifted verbatim so the
@@ -9,151 +15,15 @@ import React, { useState, useRef, useEffect } from 'react';
  * them with whiteboard endpoints when those land (6.2 / 8.2).
  */
 export const useWhiteboard = (groupId) => {
-    // Mock current user
-    const currentUser = {
-        id: 1,
-        name: "You",
-        email: "you@example.com",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-    };
+    const currentUser = CURRENT_USER;
+    const groupMembers = GROUP_MEMBERS;
 
-    // Mock group members for tagging
-    const groupMembers = [
-        {
-            id: 1,
-            name: "You",
-            email: "you@example.com",
-            avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-        },
-        {
-            id: 2,
-            name: "Rahul",
-            email: "rahul@example.com",
-            avatar: "https://randomuser.me/api/portraits/men/22.jpg"
-        },
-        {
-            id: 3,
-            name: "Priya",
-            email: "priya@example.com",
-            avatar: "https://randomuser.me/api/portraits/women/26.jpg"
-        },
-        {
-            id: 4,
-            name: "Amit",
-            email: "amit@example.com",
-            avatar: "https://randomuser.me/api/portraits/men/43.jpg"
-        },
-        {
-            id: 5,
-            name: "Neha",
-            email: "neha@example.com",
-            avatar: "https://randomuser.me/api/portraits/women/33.jpg"
-        }
-    ];
+    const [notes, setNotes] = useState(SEED_NOTES);
 
-    // Sample notes with attachments, user info, and mentions
-    const [notes, setNotes] = useState([
-        {
-            id: 1,
-            text: "Everyone, I've uploaded the hotel booking receipt for our Thailand trip. @Rahul @Priya please check if the booking details are correct.",
-            createdAt: "2025-01-06T10:30:00",
-            author: {
-                id: 1,
-                name: "You",
-                avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-            },
-            attachments: [
-                {
-                    id: 101,
-                    name: "thailand_hotel_receipt.jpg",
-                    type: "image/jpeg",
-                    size: "1.2 MB",
-                    url: "/api/placeholder/800/500",
-                }
-            ],
-            tags: ["receipt", "trip"],
-            mentions: [2, 3], // IDs of mentioned users
-            reactions: {
-                likes: [2, 3, 4], // User IDs who liked
-                seen: [2, 3, 4, 5] // User IDs who've seen
-            },
-            comments: [
-                {
-                    id: 201,
-                    text: "Looks good! The check-in time is perfect.",
-                    createdAt: "2025-01-06T11:42:00",
-                    author: {
-                        id: 2,
-                        name: "Rahul",
-                        avatar: "https://randomuser.me/api/portraits/men/22.jpg"
-                    }
-                }
-            ]
-        },
-        {
-            id: 2,
-            text: "Remember to collect ₹500 from @Rahul for the dinner last week. I've attached the bill for reference.",
-            createdAt: "2025-03-15T14:30:00",
-            author: {
-                id: 1,
-                name: "You",
-                avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-            },
-            attachments: [
-                {
-                    id: 102,
-                    name: "dinner_bill_march15.jpg",
-                    type: "image/jpeg",
-                    size: "0.8 MB",
-                    url: "/api/placeholder/800/500",
-                }
-            ],
-            tags: ["reminder", "payment", "dinner"],
-            mentions: [2],
-            reactions: {
-                likes: [2],
-                seen: [2, 3, 5]
-            },
-            comments: []
-        },
-        {
-            id: 3,
-            text: "I made the first payment for our upcoming cricket match tickets. @Amit @Rahul we need to split this 3 ways.",
-            createdAt: "2025-03-12T16:20:00",
-            author: {
-                id: 3,
-                name: "Priya",
-                avatar: "https://randomuser.me/api/portraits/women/26.jpg"
-            },
-            attachments: [
-                {
-                    id: 103,
-                    name: "cricket_tickets_payment.pdf",
-                    type: "application/pdf",
-                    size: "0.5 MB",
-                    url: null,
-                }
-            ],
-            tags: ["cricket", "tickets", "split"],
-            mentions: [2, 4],
-            reactions: {
-                likes: [1, 2, 4],
-                seen: [1, 2, 4, 5]
-            },
-            comments: [
-                {
-                    id: 202,
-                    text: "I'll send you my share via UPI today.",
-                    createdAt: "2025-03-12T17:05:00",
-                    author: {
-                        id: 4,
-                        name: "Amit",
-                        avatar: "https://randomuser.me/api/portraits/men/43.jpg"
-                    }
-                }
-            ]
-        }
-    ]);
+    // Bound to this group's members so callers keep the (text, mentions) shape.
+    const parseTextWithMentions = (text, mentions) =>
+        parseMentions(text, mentions, groupMembers);
+    const extractMentions = (text) => findMentions(text, groupMembers);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTags, setSelectedTags] = useState([]);
@@ -236,34 +106,6 @@ export const useWhiteboard = (groupId) => {
     }, []);
 
     // Process mentions
-    const parseTextWithMentions = (text, mentions) => {
-        if (!mentions || mentions.length === 0) return text;
-
-        let result = text;
-        // For each mentioned user
-        groupMembers
-            .filter(member => mentions.includes(member.id))
-            .forEach(member => {
-                // Replace @Username with styled version
-                const regex = new RegExp(`@${member.name}`, 'g');
-                result = result.replace(regex, `|MENTION:${member.id}:${member.name}|`);
-            });
-
-        // Then convert to JSX with styled mentions
-        const parts = result.split('|');
-        return parts.map((part, index) => {
-            if (part.startsWith('MENTION:')) {
-                const [_, userId, userName] = part.split(':');
-                return (
-                    <span key={index} className="wb-mention-tag">
-                        <AtSign size={12} className="wb-mention-icon" />
-                        {userName}
-                    </span>
-                );
-            }
-            return part;
-        });
-    };
 
     // Get all unique tags from notes
     const allTags = [...new Set(notes.flatMap(note => note.tags))];
@@ -345,17 +187,6 @@ export const useWhiteboard = (groupId) => {
     };
 
     // Extract mentions from text
-    const extractMentions = (text) => {
-        const mentionedUsers = [];
-
-        groupMembers.forEach(member => {
-            if (text.includes(`@${member.name}`)) {
-                mentionedUsers.push(member.id);
-            }
-        });
-
-        return mentionedUsers;
-    };
 
     // Add a new note
     const handleAddNote = () => {
@@ -529,30 +360,8 @@ export const useWhiteboard = (groupId) => {
     };
 
     // Format date
-    const formatDate = (dateString) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     // Format relative time
-    const formatRelativeTime = (dateString) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - date) / 1000);
-
-        if (diffInSeconds < 60) return 'just now';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-
-        return formatDate(dateString).split(',')[0]; // Just return the date part
-    };
 
     // Filter group members for mention menu
     const filteredMembers = groupMembers.filter(member =>
