@@ -6,6 +6,7 @@ import {
 } from '@centiverse/contracts';
 import type { Db } from '../db/prisma';
 import { requireClaims } from '../plugins/auth';
+import { registerIdempotency } from '../plugins/idempotency';
 import {
   addMember,
   createGroup,
@@ -27,13 +28,15 @@ import {
 export const groupRoutes = (db: Db) =>
   async function routes(app: FastifyInstance): Promise<void> {
     app.addHook('preHandler', app.requireAuth);
+    // Registered after requireAuth so the key can be scoped to the caller.
+    registerIdempotency(app, db);
 
     app.get('/groups', async (request) => listGroups(db, requireClaims(request).sub));
 
     app.post('/groups', async (request, reply) => {
       const input = CreateGroupInputSchema.parse(request.body);
       const group = await createGroup(db, requireClaims(request).sub, input);
-      reply.status(201).send(group);
+      return reply.status(201).send(group);
     });
 
     app.get<{ Params: { id: string } }>('/groups/:id', async (request) =>
@@ -47,7 +50,7 @@ export const groupRoutes = (db: Db) =>
 
     app.delete<{ Params: { id: string } }>('/groups/:id', async (request, reply) => {
       await deleteGroup(db, requireClaims(request).sub, request.params.id);
-      reply.status(204).send();
+      return reply.status(204).send();
     });
 
     app.get<{ Params: { id: string } }>('/groups/:id/members', async (request) =>
@@ -57,7 +60,7 @@ export const groupRoutes = (db: Db) =>
     app.post<{ Params: { id: string } }>('/groups/:id/members', async (request, reply) => {
       const input = AddMemberInputSchema.parse(request.body);
       const added = await addMember(db, requireClaims(request).sub, request.params.id, input);
-      reply.status(201).send(added);
+      return reply.status(201).send(added);
     });
 
     app.delete<{ Params: { id: string; userId: string } }>(
@@ -69,7 +72,7 @@ export const groupRoutes = (db: Db) =>
           request.params.id,
           request.params.userId,
         );
-        reply.status(204).send();
+        return reply.status(204).send();
       },
     );
 

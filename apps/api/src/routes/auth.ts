@@ -51,7 +51,7 @@ export const authRoutes = (db: Db, env: Env) =>
       reply: FastifyReply,
       result: { user: AuthResult['user']; tokens: IssuedTokens },
       status = 200,
-    ): void => {
+    ) => {
       const useHeader = wantsHeaderTransport(request);
       if (useHeader) {
         clearRefreshCookie(reply, env);
@@ -67,13 +67,16 @@ export const authRoutes = (db: Db, env: Env) =>
           ...(useHeader ? { refreshToken: result.tokens.refreshToken } : {}),
         },
       };
-      reply.status(status).send(body);
+      // `return reply` is not optional in an async handler that sends: without
+      // it Fastify sees the promise resolve with undefined and runs the send
+      // path a second time, with an empty payload.
+      return reply.status(status).send(body);
     };
 
     app.post('/auth/register', async (request, reply) => {
       const input = RegisterInputSchema.parse(request.body);
       const result = await register(deps, input, contextOf(request));
-      sendAuthResult(request, reply, result, 201);
+      return sendAuthResult(request, reply, result, 201);
     });
 
     app.post(
@@ -106,7 +109,7 @@ export const authRoutes = (db: Db, env: Env) =>
       async (request, reply) => {
         const input = LoginInputSchema.parse(request.body);
         const result = await login(deps, input, contextOf(request));
-        sendAuthResult(request, reply, result);
+        return sendAuthResult(request, reply, result);
       },
     );
 
@@ -117,14 +120,14 @@ export const authRoutes = (db: Db, env: Env) =>
         throw ApiError.unauthenticated('no refresh token supplied');
       }
       const result = await refresh(deps, token, contextOf(request));
-      sendAuthResult(request, reply, result);
+      return sendAuthResult(request, reply, result);
     });
 
     app.post('/auth/logout', async (request, reply) => {
       const body = RefreshInputSchema.parse(request.body ?? {});
       await logout(deps, readRefreshToken(request, body));
       clearRefreshCookie(reply, env);
-      reply.status(204).send();
+      return reply.status(204).send();
     });
 
     app.get('/auth/sessions', { preHandler: app.requireAuth }, async (request) => {
@@ -138,7 +141,7 @@ export const authRoutes = (db: Db, env: Env) =>
       async (request, reply) => {
         const claims = requireClaims(request);
         await revokeSession(deps, claims.sub, request.params.id);
-        reply.status(204).send();
+        return reply.status(204).send();
       },
     );
 
