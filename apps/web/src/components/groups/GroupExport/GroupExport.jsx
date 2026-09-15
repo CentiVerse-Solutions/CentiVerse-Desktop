@@ -16,6 +16,11 @@ import {
     Printer
 } from 'lucide-react';
 import './GroupExport.css';
+import ExportDateRange from '../../../features/groups/components/ExportDateRange';
+import {
+    generateCsvData as buildCsv,
+    generateJsonData as buildJson,
+} from '../../../features/groups/exportData';
 
 const GroupExport = ({ isOpen, onClose, group, expenses, members, balances }) => {
     const [selectedFormat, setSelectedFormat] = useState('csv');
@@ -30,146 +35,19 @@ const GroupExport = ({ isOpen, onClose, group, expenses, members, balances }) =>
     });
 
     // Filter expenses based on date range
-    const filterExpensesByDate = (expenses) => {
-        if (dateRange === 'all') {
-            return expenses;
-        }
-
-        const now = new Date();
-        let startDate;
-
-        if (dateRange === 'custom' && customDateStart && customDateEnd) {
-            startDate = new Date(customDateStart);
-            const endDate = new Date(customDateEnd);
-            endDate.setHours(23, 59, 59, 999); // End of day
-
-            return expenses.filter(expense => {
-                const expenseDate = new Date(expense.date);
-                return expenseDate >= startDate && expenseDate <= endDate;
-            });
-        } else if (dateRange === 'month') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        } else if (dateRange === 'quarter') {
-            const quarter = Math.floor(now.getMonth() / 3);
-            startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        } else if (dateRange === 'year') {
-            startDate = new Date(now.getFullYear(), 0, 1);
-        } else {
-            return expenses;
-        }
-
-        return expenses.filter(expense => {
-            const expenseDate = new Date(expense.date);
-            return expenseDate >= startDate && expenseDate <= now;
-        });
+    const exportArgs = {
+        group,
+        expenses,
+        balances,
+        members,
+        dateRange,
+        customDateStart,
+        customDateEnd,
+        selectedData,
     };
+    const generateCsvData = () => buildCsv(exportArgs);
+    const generateJsonData = () => buildJson(exportArgs);
 
-    // Generate CSV data
-    const generateCsvData = () => {
-        let csvContent = '';
-        const filteredExpenses = filterExpensesByDate(expenses);
-
-        // Add expenses data
-        if (selectedData.expenses && filteredExpenses.length > 0) {
-            csvContent += 'EXPENSES\n';
-            csvContent += 'Date,Description,Amount,Paid By,Category,Participants\n';
-
-            filteredExpenses.forEach(expense => {
-                const date = new Date(expense.date).toLocaleDateString();
-                const description = `"${expense.description}"`;
-                const amount = expense.amount;
-                const paidBy = expense.paidBy.name;
-                const category = expense.category ? expense.category.name : '';
-                const participants = expense.participants.map(p => p.name).join('; ');
-
-                csvContent += `${date},${description},${amount},${paidBy},${category},"${participants}"\n`;
-            });
-
-            csvContent += '\n';
-        }
-
-        // Add balances data
-        if (selectedData.balances && balances && balances.length > 0) {
-            csvContent += 'BALANCES\n';
-            csvContent += 'Member,Balance\n';
-
-            balances.forEach(balance => {
-                csvContent += `${balance.name},${balance.balance}\n`;
-            });
-
-            csvContent += '\n';
-        }
-
-        // Add members data
-        if (selectedData.members && members && members.length > 0) {
-            csvContent += 'MEMBERS\n';
-            csvContent += 'Name,Email\n';
-
-            members.forEach(member => {
-                csvContent += `${member.name},${member.email || ''}\n`;
-            });
-
-            csvContent += '\n';
-        }
-
-        // Add summary data
-        if (selectedData.summary) {
-            csvContent += 'SUMMARY\n';
-            const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-            const expenseCount = filteredExpenses.length;
-            const memberCount = members ? members.length : 0;
-
-            csvContent += 'Metric,Value\n';
-            csvContent += `Total Expenses,${totalExpenses}\n`;
-            csvContent += `Number of Expenses,${expenseCount}\n`;
-            csvContent += `Number of Members,${memberCount}\n`;
-
-            if (dateRange !== 'all') {
-                csvContent += `Date Range,${dateRange}\n`;
-            }
-        }
-
-        return csvContent;
-    };
-
-    // Generate JSON data
-    const generateJsonData = () => {
-        const filteredExpenses = filterExpensesByDate(expenses);
-        const data = {
-            group: {
-                id: group.id,
-                name: group.name,
-                createdAt: group.createdAt,
-                currency: group.currency
-            },
-            exportDate: new Date().toISOString(),
-            dateRange: dateRange
-        };
-
-        if (selectedData.expenses) {
-            data.expenses = filteredExpenses;
-        }
-
-        if (selectedData.balances && balances) {
-            data.balances = balances;
-        }
-
-        if (selectedData.members && members) {
-            data.members = members;
-        }
-
-        if (selectedData.summary) {
-            data.summary = {
-                totalExpenses: filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0),
-                expenseCount: filteredExpenses.length,
-                memberCount: members ? members.length : 0
-            };
-        }
-
-        return JSON.stringify(data, null, 2);
-    };
-
-    // Handle download
     const handleDownload = () => {
         let data, filename, type;
 
@@ -279,90 +157,16 @@ const GroupExport = ({ isOpen, onClose, group, expenses, members, balances }) =>
                     </div>
 
                     <div className="modal-body">
-                        <div className="export-section">
-                            <h3 className="section-title">
-                                <Calendar size={18} className="section-icon" />
-                                Date Range
-                            </h3>
-                            <div className="date-range-options">
-                                <label className="date-option">
-                                    <input
-                                        type="radio"
-                                        name="dateRange"
-                                        value="all"
-                                        checked={dateRange === 'all'}
-                                        onChange={e => setDateRange(e.target.value)}
-                                    />
-                                    <span>All Time</span>
-                                </label>
-                                <label className="date-option">
-                                    <input
-                                        type="radio"
-                                        name="dateRange"
-                                        value="month"
-                                        checked={dateRange === 'month'}
-                                        onChange={e => setDateRange(e.target.value)}
-                                    />
-                                    <span>This Month</span>
-                                </label>
-                                <label className="date-option">
-                                    <input
-                                        type="radio"
-                                        name="dateRange"
-                                        value="quarter"
-                                        checked={dateRange === 'quarter'}
-                                        onChange={e => setDateRange(e.target.value)}
-                                    />
-                                    <span>This Quarter</span>
-                                </label>
-                                <label className="date-option">
-                                    <input
-                                        type="radio"
-                                        name="dateRange"
-                                        value="year"
-                                        checked={dateRange === 'year'}
-                                        onChange={e => setDateRange(e.target.value)}
-                                    />
-                                    <span>This Year</span>
-                                </label>
-                                <label className="date-option">
-                                    <input
-                                        type="radio"
-                                        name="dateRange"
-                                        value="custom"
-                                        checked={dateRange === 'custom'}
-                                        onChange={e => setDateRange(e.target.value)}
-                                    />
-                                    <span>Custom</span>
-                                </label>
-                            </div>
-
-                            {dateRange === 'custom' && (
-                                <div className="custom-date-range">
-                                    <div className="date-input-group">
-                                        <label htmlFor="start-date">Start Date</label>
-                                        <input
-                                            type="date"
-                                            id="start-date"
-                                            value={customDateStart}
-                                            onChange={e => setCustomDateStart(e.target.value)}
-                                            max={customDateEnd || today}
-                                        />
-                                    </div>
-                                    <div className="date-input-group">
-                                        <label htmlFor="end-date">End Date</label>
-                                        <input
-                                            type="date"
-                                            id="end-date"
-                                            value={customDateEnd}
-                                            onChange={e => setCustomDateEnd(e.target.value)}
-                                            min={customDateStart}
-                                            max={today}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <ExportDateRange
+                            today={today}
+                            dateRange={dateRange}
+                            setDateRange={setDateRange}
+                            customDateStart={customDateStart}
+                            setCustomDateStart={setCustomDateStart}
+                            customDateEnd={customDateEnd}
+                            setCustomDateEnd={setCustomDateEnd}
+                            group={group}
+                        />
 
                         <div className="export-section">
                             <h3 className="section-title">
